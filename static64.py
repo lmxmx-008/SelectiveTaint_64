@@ -135,6 +135,8 @@ class Info(object):
         # call site addr (or unsolved jmp site addr) to the parameter it accesses
         # 1 - 10 for ten parameters
         self.callsite_para_access_map = {}
+        self.callsite_reg_para_access_map = {}
+        self.callsite_reg_xmm_para_access_map = {}
 
         # call site addr to a list of 0/1
         # 0: type not determined
@@ -151,7 +153,8 @@ class Info(object):
         # insn addr to tainted or not
         self.insn_tainted_map = {}
 
-        self.gpr = ["eax", "ebx", "ecx", "edx", "edi", "esi", "esp", "ebp"]
+        self.gpr = ["rax", "rbx", "rcx", "rdx", "rdi", "rsi", "rsp", "rbp", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"]
+
 
         # func addr to func summary map
         # func summary:
@@ -245,73 +248,72 @@ def binary_static_taint():
 
     for func_addr in info.ordered_func_addresses:
         info.func_taintedvar_map[func_addr] = set()
-        # info.func_taintedvar_summary_map[func_addr] = set()
+    # info.func_taintedvar_summary_map[func_addr] = set()
 
     # taint source initialization
     for taintsource in info.args.taintsources:
         if taintsource == "read":
             # print(hex(info.func_name_map["read@plt"][0]))
-            info.func_taintedvar_map[info.func_name_map["read@plt"][0]] = set([0x8])
-            # info.func_taintedvar_summary_map[info.func_name_map["read@plt"][0]] = set([0x8])
+            info.func_taintedvar_map[info.func_name_map["read@plt"][0]] = set([0x10])
+        # info.func_taintedvar_summary_map[info.func_name_map["read@plt"][0]] = set([0x8])
         if taintsource == "__read_chk":
-            info.func_taintedvar_map[info.func_name_map["__read_chk@plt"][0]] = set([0x8])
+            info.func_taintedvar_map[info.func_name_map["__read_chk@plt"][0]] = set([0x10])
         elif taintsource == "fread":
             # print(hex(info.func_name_map["fread@plt"][0]))
-            info.func_taintedvar_map[info.func_name_map["fread@plt"][0]] = set([0x4])
-            # info.func_taintedvar_summary_map[info.func_name_map["fread@plt"][0]] = set([0x4])
+            info.func_taintedvar_map[info.func_name_map["fread@plt"][0]] = set([0x8])
+        # info.func_taintedvar_summary_map[info.func_name_map["fread@plt"][0]] = set([0x4])
         elif taintsource == "fgetc":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
-            info.func_taintedvar_map[info.func_name_map["fgetc@plt"][0]] = set(["eax"])
-            # info.func_taintedvar_summary_map[info.func_name_map["fgetc@plt"][0]] = set(["eax"])
+            info.func_taintedvar_map[info.func_name_map["fgetc@plt"][0]] = set(["rax"])
+        # info.func_taintedvar_summary_map[info.func_name_map["fgetc@plt"][0]] = set(["eax"])
         elif taintsource == "_IO_getc":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
-            info.func_taintedvar_map[info.func_name_map["_IO_getc@plt"][0]] = set(["eax"])
+            info.func_taintedvar_map[info.func_name_map["_IO_getc@plt"][0]] = set(["rax"])
         elif taintsource == "fgets":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
-            info.func_taintedvar_map[info.func_name_map["fgets@plt"][0]] = set([0x4, "eax"])
+            info.func_taintedvar_map[info.func_name_map["fgets@plt"][0]] = set([0x8, "rax"])
         elif taintsource == "fgets_unlocked":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
-            info.func_taintedvar_map_typed[info.func_name_map["fgets_unlocked@plt"][0]] = set([0x4, "eax"])
+            info.func_taintedvar_map_typed[info.func_name_map["fgets_unlocked@plt"][0]] = set([0x8, "rax"])
         elif taintsource == "__isoc99_fscanf":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
             info.func_taintedvar_map[info.func_name_map["__isoc99_fscanf@plt"][0]] = set(
-                [0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24])
+                [0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48])
         elif taintsource == "fscanf":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
             info.func_taintedvar_map[info.func_name_map["fscanf@plt"][0]] = set(
-                [0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24, 0x28])
+                [0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48 ,0x50])
         elif taintsource == "_ZNSi4readEPci":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
-            info.func_taintedvar_map[info.func_name_map["_ZNSi4readEPci@plt"][0]] = set([0x4])
+            info.func_taintedvar_map[info.func_name_map["_ZNSi4readEPci@plt"][0]] = set([0x8])
         elif taintsource == "readv":
-            info.func_taintedvar_map[info.func_name_map["readv@plt"][0]] = set([0x8])
+            info.func_taintedvar_map[info.func_name_map["readv@plt"][0]] = set([0x10])
         elif taintsource == "readlink":
-            info.func_taintedvar_map[info.func_name_map["readlink@plt"][0]] = set([0x8])
+            info.func_taintedvar_map[info.func_name_map["readlink@plt"][0]] = set([0x10])
         elif taintsource == "pread64":
-            info.func_taintedvar_map[info.func_name_map["pread64@plt"][0]] = set([0x8])
+            info.func_taintedvar_map[info.func_name_map["pread64@plt"][0]] = set([0x10])
         elif taintsource == "__fread_chk":
-            info.func_taintedvar_map[info.func_name_map["__fread_chk@plt"][0]] = set([0x4])
+            info.func_taintedvar_map[info.func_name_map["__fread_chk@plt"][0]] = set([0x8])
         elif taintsource == "fread_unlocked":
-            info.func_taintedvar_map[info.func_name_map["fread_unlocked@plt"][0]] = set([0x4])
+            info.func_taintedvar_map[info.func_name_map["fread_unlocked@plt"][0]] = set([0x8])
         elif taintsource == "__fread_unlocked_chk":
-            info.func_taintedvar_map[info.func_name_map["__fread_unlocked_chk@plt"][0]] = set([0x4])
+            info.func_taintedvar_map[info.func_name_map["__fread_unlocked_chk@plt"][0]] = set([0x8])
         elif taintsource == "wgetch":
-            info.func_taintedvar_map[info.func_name_map["wgetch@plt"][0]] = set(["eax"])
+            info.func_taintedvar_map[info.func_name_map["wgetch@plt"][0]] = set(["rax"])
         elif taintsource == "getline":
-            info.func_taintedvar_map[info.func_name_map["getline@plt"][0]] = set([0x4])
+            info.func_taintedvar_map[info.func_name_map["getline@plt"][0]] = set([0x8])
         elif taintsource == "__isoc99_scanf":
             info.func_taintedvar_map[info.func_name_map["__isoc99_scanf@plt"][0]] = set(
-                [0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24])
+                [0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48])
         elif taintsource == "recv":
-            print("recv tainted")
-            info.func_taintedvar_map[info.func_name_map["recv@plt"][0]] = set([0x8])
+            info.func_taintedvar_map[info.func_name_map["recv@plt"][0]] = set([0x10])
         elif taintsource == "recvfrom":
-            info.func_taintedvar_map_typed[info.func_name_map["recvfrom@plt"][0]] = set([0x8])
+            info.func_taintedvar_map_typed[info.func_name_map["recvfrom@plt"][0]] = set([0x10])
         elif taintsource == "gnutls_record_recv":
-            info.func_taintedvar_map[info.func_name_map["gnutls_record_recv@plt"][0]] = set([0x8])
-        # jpeg_read_header
-        # jpeg_read_raw_data
-        # png_read_image
+            info.func_taintedvar_map[info.func_name_map["gnutls_record_recv@plt"][0]] = set([0x10])
+    # jpeg_read_header
+    # jpeg_read_raw_data
+    # png_read_image
 
     # iterate
     # for i in range(1):
@@ -374,8 +376,13 @@ def binary_static_taint():
                 func_para_access = info.funcaddr_para_access_map[func_addr]
                 func_para_index_set = set(range(func_para_access)).union(set([func_para_access])) - set([0])
                 for func_para_index in sorted(func_para_index_set):
-                    func_para_values.append(int(4 * func_para_index))
-
+                    # func_para_values.append(int(4 * func_para_index))
+                    if func_para_index < 6:
+                        # 前六个参数使用寄存器传递
+                        func_para_values.append(f"reg{func_para_index}")
+                    else:
+                        # 其余参数使用堆栈传递，每个参数占8个字节
+                        func_para_values.append(int(8 * (func_para_index - 6)))
             # print("**")
             # for func_para_value in func_para_values:
             #	print(hex(func_para_value))
@@ -385,12 +392,16 @@ def binary_static_taint():
             for callsite in callsites:
                 # get esp value
                 if callsite in info.insn_stack_offset_map:
-                    esp_value = info.insn_stack_offset_map[callsite]
+                    rsp_value = info.insn_stack_offset_map[callsite]
                     if callsite in info.callsite_para_access_map:
                         callsite_para_access = info.callsite_para_access_map[callsite]
                         callsite_para_values = []
                         for callsite_para_index in range(callsite_para_access):
-                            callsite_para_values.append(int(4 * callsite_para_index + esp_value))
+                            # 如果参数索引小于6，则参数通过寄存器传递，否则通过堆栈传递
+                            if callsite_para_index < 6:
+                                callsite_para_values.append(f"reg{callsite_para_index}")
+                            else:
+                                callsite_para_values.append(int(8 * (callsite_para_index - 6) + rsp_value))
                         callsite_para_values_map[callsite] = copy.deepcopy(callsite_para_values)
 
             # print("***")
@@ -441,12 +452,12 @@ def binary_static_taint():
                                             info.func_taintedvar_map[func_addr])) != 0:
                                         # print("2.1")
                                         # add CALLSITE_P1(-P10)_0x(callsite) to caller
-                                        callsite_para_index = int((callsite_para_value - esp_value) / 4 + 1)
+                                        callsite_para_index = int((callsite_para_value - esp_value) / 8 + 1)
                                         value = "CALLSITE_P" + str(callsite_para_index) + "_" + hex(callsite)
                                         info.func_taintedvar_map[func_addr].add(value)
                                         # print("2.2")
                                         # add para offset value to callee
-                                        callee_para_value = int(callsite_para_index * 4)
+                                        callee_para_value = int(callsite_para_index * 8)
                                         if callsite in info.callsite_map:
                                             for callee in sorted(info.callsite_map[callsite]):
                                                 info.func_taintedvar_map[callee].add(callee_para_value)
@@ -458,59 +469,59 @@ def binary_static_taint():
                                                     # if plt func
                                                     if callee_name.endswith("@plt"):
                                                         if callee_name == "memmove@plt":
-                                                            if 0x8 in info.func_taintedvar_map[callee] \
-                                                                    and 0x4 not in info.func_taintedvar_map[callee]:
+                                                            if 0x10 in info.func_taintedvar_map[callee] \
+                                                                    and 0x8 not in info.func_taintedvar_map[callee]:
                                                                 info.func_taintedvar_map[callee] = copy.deepcopy( \
-                                                                    info.func_taintedvar_map[callee].union(set([0x4])))
+                                                                    info.func_taintedvar_map[callee].union(set([0x8])))
                                                         elif callee_name == "memcopy@plt":
-                                                            if 0x8 in info.func_taintedvar_map[callee] \
-                                                                    and 0x4 not in info.func_taintedvar_map[callee]:
+                                                            if 0x10 in info.func_taintedvar_map[callee] \
+                                                                    and 0x8 not in info.func_taintedvar_map[callee]:
                                                                 info.func_taintedvar_map[callee] = copy.deepcopy( \
-                                                                    info.func_taintedvar_map[callee].union(set([0x4])))
+                                                                    info.func_taintedvar_map[callee].union(set([0x8])))
                                                         elif callee_name == "memset@plt":
-                                                            if 0x8 in info.func_taintedvar_map[callee] \
-                                                                    and 0x4 not in info.func_taintedvar_map[callee]:
+                                                            if 0x10 in info.func_taintedvar_map[callee] \
+                                                                    and 0x8 not in info.func_taintedvar_map[callee]:
                                                                 info.func_taintedvar_map[callee] = copy.deepcopy( \
-                                                                    info.func_taintedvar_map[callee].union(set([0x4])))
+                                                                    info.func_taintedvar_map[callee].union(set([0x8])))
                                                         elif callee_name == "strcpy@plt":
-                                                            if 0x8 in info.func_taintedvar_map[callee] \
-                                                                    and 0x4 not in info.func_taintedvar_map[callee]:
+                                                            if 0x10 in info.func_taintedvar_map[callee] \
+                                                                    and 0x8 not in info.func_taintedvar_map[callee]:
                                                                 info.func_taintedvar_map[callee] = copy.deepcopy( \
-                                                                    info.func_taintedvar_map[callee].union(set([0x4])))
+                                                                    info.func_taintedvar_map[callee].union(set([0x8])))
                                                         elif callee_name == "strncpy@plt":
-                                                            if 0x8 in info.func_taintedvar_map[callee] \
-                                                                    and 0x4 not in info.func_taintedvar_map[callee]:
+                                                            if 0x10 in info.func_taintedvar_map[callee] \
+                                                                    and 0x8 not in info.func_taintedvar_map[callee]:
                                                                 info.func_taintedvar_map[callee] = copy.deepcopy( \
-                                                                    info.func_taintedvar_map[callee].union(set([0x4])))
+                                                                    info.func_taintedvar_map[callee].union(set([0x8])))
                                                         elif callee_name == "strtol@plt":
-                                                            if 0x4 in info.func_taintedvar_map[callee] \
-                                                                    and (0x8 not in info.func_taintedvar_map[callee] \
-                                                                         or "eax" not in info.func_taintedvar_map[
+                                                            if 0x8 in info.func_taintedvar_map[callee] \
+                                                                    and (0x10 not in info.func_taintedvar_map[callee] \
+                                                                         or "rax" not in info.func_taintedvar_map[
                                                                              callee]):
                                                                 info.func_taintedvar_map[callee] = copy.deepcopy( \
                                                                     info.func_taintedvar_map[callee].union(
-                                                                        set([0x8, "eax"])))
+                                                                        set([0x10, "rax"])))
                                                         elif callee_name == "gcvt@plt":
-                                                            if 0x4 in info.func_taintedvar_map[callee] \
-                                                                    and 0xc not in info.func_taintedvar_map[callee]:
+                                                            if 0x8 in info.func_taintedvar_map[callee] \
+                                                                    and 0x18 not in info.func_taintedvar_map[callee]:
                                                                 info.func_taintedvar_map[callee] = copy.deepcopy( \
-                                                                    info.func_taintedvar_map[callee].union(set([0xc])))
+                                                                    info.func_taintedvar_map[callee].union(set([0x18])))
 
-                                        # print("2.3")
-                                        # add ret offset value to callee
-                                        # if callsite in info.callsite_map:
-                                        #	for callee in sorted(info.callsite_map[callsite]):
-                                        #		if callee in info.func_summary_map and "eax" in info.func_summary_map[callee] \
-                                        #			and callee_para_value in info.func_summary_map[callee]["eax"]:
-                                        #			info.func_taintedvar_map[callee].add("eax")
+                                    # print("2.3")
+                                    # add ret offset value to callee
+                                    # if callsite in info.callsite_map:
+                                    #	for callee in sorted(info.callsite_map[callsite]):
+                                    #		if callee in info.func_summary_map and "eax" in info.func_summary_map[callee] \
+                                    #			and callee_para_value in info.func_summary_map[callee]["eax"]:
+                                    #			info.func_taintedvar_map[callee].add("eax")
 
                                 # check how callsites paras and rets flow to caller
                                 # callee -> caller
-                                callsite_para_index = int((callsite_para_value - esp_value) / 4 + 1)
+                                callsite_para_index = int((callsite_para_value - esp_value) / 8 + 1)
                                 para_value = "CALLSITE_P" + str(callsite_para_index) + "_" + hex(callsite)
                                 # CALLSITE_EAX_0x(callsite)
-                                ret_value = "CALLSITE_EAX_" + hex(callsite)
-                                callee_para_value = int(callsite_para_index * 4)
+                                ret_value = "CALLSITE_RAX_" + hex(callsite)
+                                callee_para_value = int(callsite_para_index * 8)
                                 # print(hex(callsite))
                                 if callsite in info.callsite_map:
                                     for callee in sorted(info.callsite_map[callsite]):
@@ -528,12 +539,12 @@ def binary_static_taint():
                                             if callsite_para_value in info.insn_summary_map[callsite]:
                                                 for stack_contained_value in info.insn_summary_map[callsite][
                                                     callsite_para_value]:
-                                                    if stack_contained_value != "eax":
+                                                    if stack_contained_value != "rax":
                                                         info.func_taintedvar_map[func_addr].add(stack_contained_value)
-                                                    # if isinstance(stack_contained_value, int):
-                                                    #	print(hex(stack_contained_value))
+                                                # if isinstance(stack_contained_value, int):
+                                                #	print(hex(stack_contained_value))
                                         # if callee return value is tainted, add it to caller
-                                        if "eax" in info.func_taintedvar_map[callee]:
+                                        if "rax" in info.func_taintedvar_map[callee]:
                                             # print("2.5")
                                             # add CALLSITE_EAX_0x(callsite)
                                             info.func_taintedvar_map[func_addr].add(ret_value)
@@ -541,11 +552,11 @@ def binary_static_taint():
                             # if callsite has no para
                             if len(callsite_para_values_map[callsite]) == 0:
                                 # print(hex(callsite))
-                                ret_value = "CALLSITE_EAX_" + hex(callsite)
+                                ret_value = "CALLSITE_RAX_" + hex(callsite)
                                 if callsite in info.callsite_map:
                                     for callee in sorted(info.callsite_map[callsite]):
                                         # if callee return value is tainted, add it to caller
-                                        if "eax" in info.func_taintedvar_map[callee]:
+                                        if "rax" in info.func_taintedvar_map[callee]:
                                             # print("2.5")
                                             # add CALLSITE_EAX_0x(callsite)
                                             info.func_taintedvar_map[func_addr].add(ret_value)
@@ -575,31 +586,31 @@ def binary_static_taint():
                                 if ab_loc_1 in info.func_taintedvar_map[func_addr]:
                                     info.func_taintedvar_map[func_addr].add(ab_loc)
 
-                                    # if ab_loc in info.gpr:
-                                    #	#if ab_loc in info.insn_summary_map[addr][ab_loc]:
-                                    #	#	info.func_taintedvar_map[func_addr].add(ab_loc)
-                                    #	info.func_taintedvar_map[func_addr].add(ab_loc)
-                                    # else:
-                                    #	info.func_taintedvar_map[func_addr].add(ab_loc)
+                                # if ab_loc in info.gpr:
+                                #	#if ab_loc in info.insn_summary_map[addr][ab_loc]:
+                                #	#	info.func_taintedvar_map[func_addr].add(ab_loc)
+                                #	info.func_taintedvar_map[func_addr].add(ab_loc)
+                                # else:
+                                #	info.func_taintedvar_map[func_addr].add(ab_loc)
 
-                                    # print("*")
-                                    # if isinstance(ab_loc, int):
-                                    #	print(hex(ab_loc))
-                                    # else:
-                                    #	print(ab_loc)
-                                    # if isinstance(ab_loc_1, int):
-                                    #	print(hex(ab_loc_1))
-                                    # else:
-                                    #	print(ab_loc_1)
-                                    # break
+                                # print("*")
+                                # if isinstance(ab_loc, int):
+                                #	print(hex(ab_loc))
+                                # else:
+                                #	print(ab_loc)
+                                # if isinstance(ab_loc_1, int):
+                                #	print(hex(ab_loc_1))
+                                # else:
+                                #	print(ab_loc_1)
+                                # break
 
                             # collect gvars
                             if isinstance(ab_loc,
                                           int) and ab_loc >= info.mmin_data_section_addr and ab_loc <= info.mmax_data_section_addr:
                                 func_gvars.add(ab_loc)
-                                # print("*")
-                                # print(hex(addr))
-                                # print(hex(ab_loc))
+                            # print("*")
+                            # print(hex(addr))
+                            # print(hex(ab_loc))
                     addr = findnextinsaddr(addr)
 
                 # print("4")
@@ -755,7 +766,7 @@ def binary_static_taint():
                                         src_op_base_reg_name = info.insnsmap[addr].reg_name(src_op.value.mem.base)
 
                                         # mov stack var via base
-                                        if src_op_base_reg_name == "esp" and src_op.value.mem.index == 0:
+                                        if src_op_base_reg_name == "rsp" and src_op.value.mem.index == 0:
                                             # print(src_op.value.mem.disp)
                                             if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                 addr] != None:
@@ -824,7 +835,7 @@ def binary_static_taint():
                                     elif src_op.value.mem.base == 0:
                                         # mov stack var via index
                                         if src_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                src_op.value.mem.index) == "esp":
+                                                src_op.value.mem.index) == "rsp":
                                             if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                 addr] != None:
                                                 value = info.insn_stack_offset_map[
@@ -868,7 +879,7 @@ def binary_static_taint():
                                     dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                     # mov into stack var via base
-                                    if dest_op_base_reg_name == "esp" and dest_op.value.mem.index == 0:
+                                    if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -940,7 +951,7 @@ def binary_static_taint():
 
                                     # mov into stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "esp":
+                                            dest_op.value.mem.index) == "rsp":
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -973,7 +984,7 @@ def binary_static_taint():
                                     dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                     # mov into stack var via base
-                                    if dest_op_base_reg_name == "esp" and dest_op.value.mem.index == 0:
+                                    if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -1025,7 +1036,7 @@ def binary_static_taint():
                                 else:
                                     # mov into stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "esp":
+                                            dest_op.value.mem.index) == "rsp":
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -1061,7 +1072,7 @@ def binary_static_taint():
 
                                     # dest mem: stack var via base
                                     if info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.base) == "esp" and dest_op.value.mem.index == 0:
+                                            dest_op.value.mem.base) == "rsp" and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -1114,7 +1125,7 @@ def binary_static_taint():
                                 else:
                                     # dest mem: stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "esp":
+                                            dest_op.value.mem.index) == "rsp":
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -1136,10 +1147,10 @@ def binary_static_taint():
 
                 if len(values_used_set.intersection(ab_locs_containing_tainted_value)) != 0:
                     info.tainted_insn_addresses.add(addr)
-                    print("*")
-                    print(hex(addr))
-                    print(values_used_set)
-                    print(ab_locs_containing_tainted_value)
+                # print("*")
+                # print(hex(addr))
+                # print(values_used_set)
+                # print(ab_locs_containing_tainted_value)
 
                 # add original taint sources to tainted insn addresses
                 if addr in info.callsite_map and len(info.callsite_map[addr]) >= 1:
@@ -1153,8 +1164,8 @@ def binary_static_taint():
 
                 addr = findnextinsaddr(addr)
 
-            # for tainted_insn_addr in sorted(info.tainted_insn_addresses):
-            #	print(hex(tainted_insn_addr))
+        # for tainted_insn_addr in sorted(info.tainted_insn_addresses):
+        #	print(hex(tainted_insn_addr))
 
         if info.tainted_insn_addresses == old_tainted_insn_addresses:
             break
@@ -1459,7 +1470,7 @@ def generate_function_summary():
                     succs = []
                     is_call_insn = False
                     callsite_para_ab_locs = []
-
+                    #找到下一个指令
                     if addr not in info.bbendaddr_bbstartaddr_map:
                         if findnextinsaddr(addr) != -1:
                             nextaddr = findnextinsaddr(addr)
@@ -1487,10 +1498,10 @@ def generate_function_summary():
                                     call_insn_para_access = info.callsite_para_access_map[addr]
                                     call_insn_esp_value = info.insn_stack_offset_map[addr]
                                     for index in range(call_insn_para_access):
-                                        ab_loc = call_insn_esp_value + index * 4
+                                        ab_loc = call_insn_esp_value + index * 8
                                         # print(str(ab_loc))
-                                        callsite_para_ab_locs.append([int(ab_loc), int(index + 1)])
-                                    # print(callsite_para_ab_locs)
+                                        callsite_para_ab_locs.append([int(ab_loc), int(index + 1)]) #堆栈地址+参数索引
+                                # print(callsite_para_ab_locs)
                             else:
                                 if func_addr in info.cfg.kb.functions:
                                     # print(hex(addr))
@@ -1597,6 +1608,7 @@ def generate_function_summary():
                                 #	copy.deepcopy((insn_summary_map[succ][ab_loc].union(added_value_set) - \
                                 #	insn_summary_map[addr][ab_loc]).union(old[ab_loc]))
 
+                                #对于ab_loc（堆栈地址） 在下一个节点的insn_summary_map中加入其值（被哪个调用点当作第几个参数的一个字符串）
                                 insn_summary_map[succ][ab_loc] = \
                                     copy.deepcopy(insn_summary_map[succ][ab_loc].union(added_value_set))
 
@@ -1606,6 +1618,7 @@ def generate_function_summary():
                                 # print(insn_summary_map[succ][ab_loc])
 
                                 # also update value in ab locs contained in callsite paras ab locs
+                                # 这里不是和上面一模一样？
                                 ab_loc_copy = ab_loc
                                 for ab_loc in insn_summary_map[addr][ab_loc_copy]:
                                     # update every ab loc except "CLEAR"
@@ -1623,13 +1636,13 @@ def generate_function_summary():
                                         insn_summary_map[succ][ab_loc] = \
                                             copy.deepcopy(insn_summary_map[succ][ab_loc].union(added_value_set))
 
-                                        # print("*")
-                                        # print(hex(succ))
-                                        # if isinstance(ab_loc, int):
-                                        #	print(hex(ab_loc))
-                                        # else:
-                                        #	print(ab_loc)
-                                        # print(insn_summary_map[succ][ab_loc])
+                                    # print("*")
+                                    # print(hex(succ))
+                                    # if isinstance(ab_loc, int):
+                                    #	print(hex(ab_loc))
+                                    # else:
+                                    #	print(ab_loc)
+                                    # print(insn_summary_map[succ][ab_loc])
 
                             # update return value eax in call fall through insn
                             # if func_return == True:
@@ -1645,10 +1658,11 @@ def generate_function_summary():
                                 added_value = "HEAP_POINTER_" + hex(addr)
                             # normal call insn
                             else:
-                                added_value = "CALLSITE_EAX_" + hex(addr)
+                                added_value = "CALLSITE_RAX_" + hex(addr)
 
                             added_value_set = set([added_value])
-                            ab_loc = "eax"
+                            # 这里默认返回值是rax
+                            ab_loc = "rax"
                             if ab_loc not in insn_summary_map[succ]:
                                 insn_summary_map[succ][ab_loc] = set()
                             if ab_loc not in insn_summary_map[addr]:
@@ -1661,10 +1675,10 @@ def generate_function_summary():
                             insn_summary_map[succ][ab_loc] = \
                                 copy.deepcopy((insn_summary_map[succ][ab_loc].union(added_value_set) - \
                                                insn_summary_map[addr][ab_loc]).union(old[ab_loc]))
-                            # print("*")
-                            # print(hex(succ))
-                            # print(ab_loc)
-                            # print(insn_summary_map[succ][ab_loc])
+                        # print("*")
+                        # print(hex(succ))
+                        # print(ab_loc)
+                        # print(insn_summary_map[succ][ab_loc])
 
                         # update value sets
                         if addr in info.insnsmap:
@@ -1682,7 +1696,7 @@ def generate_function_summary():
                                     if insn.mnemonic.startswith("push"):
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
-                                            write_to_stack_addr = info.insn_stack_offset_map[addr] - 4
+                                            write_to_stack_addr = info.insn_stack_offset_map[addr] - 8
                                             if reg_name not in insn_summary_map[addr]:
                                                 insn_summary_map[addr][reg_name] = set([reg_name])
                                             if write_to_stack_addr not in insn_summary_map[succ]:
@@ -1797,7 +1811,7 @@ def generate_function_summary():
                                                     src_op.value.mem.base)
 
                                                 # mov stack var via base
-                                                if src_op_base_reg_name == "esp" and src_op.value.mem.index == 0:
+                                                if src_op_base_reg_name == "rsp" and src_op.value.mem.index == 0:
                                                     # print(src_op.value.mem.disp)
                                                     if addr in info.insn_stack_offset_map and \
                                                             info.insn_stack_offset_map[addr] != None:
@@ -1909,7 +1923,7 @@ def generate_function_summary():
                                             elif src_op.value.mem.base == 0:
                                                 # mov stack var via index
                                                 if src_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                        src_op.value.mem.index) == "esp":
+                                                        src_op.value.mem.index) == "rsp":
                                                     if addr in info.insn_stack_offset_map and \
                                                             info.insn_stack_offset_map[addr] != None:
                                                         value = info.insn_stack_offset_map[
@@ -1976,7 +1990,7 @@ def generate_function_summary():
                                             dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                             # mov into stack var via base
-                                            if dest_op_base_reg_name == "esp" and dest_op.value.mem.index == 0:
+                                            if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -2093,7 +2107,7 @@ def generate_function_summary():
 
                                             # mov into stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "esp":
+                                                    dest_op.value.mem.index) == "rsp":
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -2149,7 +2163,7 @@ def generate_function_summary():
                                             dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                             # mov into stack var via base
-                                            if dest_op_base_reg_name == "esp" and dest_op.value.mem.index == 0:
+                                            if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -2201,7 +2215,7 @@ def generate_function_summary():
                                         else:
                                             # mov into stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "esp":
+                                                    dest_op.value.mem.index) == "rsp":
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -2276,7 +2290,7 @@ def generate_function_summary():
 
                                             # dest mem: stack var via base
                                             if info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.base) == "esp" and dest_op.value.mem.index == 0:
+                                                    dest_op.value.mem.base) == "rsp" and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -2329,7 +2343,7 @@ def generate_function_summary():
                                         else:
                                             # dest mem: stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "esp":
+                                                    dest_op.value.mem.index) == "rsp":
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -2419,8 +2433,8 @@ def generate_function_summary():
                             info.func_summary_map[func_addr][ab_loc] = set()
                         info.func_summary_map[func_addr][ab_loc] = copy.deepcopy(
                             info.func_summary_map[func_addr][ab_loc].union(insn_summary_map[addr][ab_loc]))
-                        # print(insn_summary_map[addr][ab_loc])
-                        # print(info.func_summary_map[func_addr][ab_loc])
+                    # print(insn_summary_map[addr][ab_loc])
+                    # print(info.func_summary_map[func_addr][ab_loc])
 
                 # update info.insn_summary_map
                 # print("*")
@@ -2434,8 +2448,8 @@ def generate_function_summary():
                         info.insn_summary_map[addr][ab_loc] = set()
                     info.insn_summary_map[addr][ab_loc] = copy.deepcopy(
                         info.insn_summary_map[addr][ab_loc].union(insn_summary_map[addr][ab_loc]))
-                    # print(insn_summary_map[addr][ab_loc])
-                    # print(info.insn_summary_map[addr][ab_loc])
+                # print(insn_summary_map[addr][ab_loc])
+                # print(info.insn_summary_map[addr][ab_loc])
 
     # for addr in sorted(info.func_summary_map):
     #	print("*")
@@ -2503,9 +2517,9 @@ def generate_function_summary():
 
 
 def binary_static_taint_typed():
-    count1 = 0
-    count2 = 0
-    count3 = 0
+    reg_para_list = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
+    reg_xmm_para_list = ["xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"]
+
     # check each function in reversed topological order
     # whether its paras, callees, globals, heaps are tainted and propagate
     # fix-point when info.func_taintedvar_map_typed remains unchanged
@@ -2517,73 +2531,73 @@ def binary_static_taint_typed():
 
     for func_addr in info.ordered_func_addresses:
         info.func_taintedvar_map_typed[func_addr] = set()
-        # info.func_taintedvar_summary_map_typed[func_addr] = set()
+    # info.func_taintedvar_summary_map_typed[func_addr] = set()
 
     # taint source initialization
     for taintsource in info.args.taintsources:
         if taintsource == "read":
             # print(hex(info.func_name_map["read@plt"][0]))
-            info.func_taintedvar_map_typed[info.func_name_map["read@plt"][0]] = set([0x8])
-            # info.func_taintedvar_summary_map_typed[info.func_name_map["read@plt"][0]] = set([0x8])
+            info.func_taintedvar_map_typed[info.func_name_map["read@plt"][0]] = set([0x10])
+        # info.func_taintedvar_summary_map_typed[info.func_name_map["read@plt"][0]] = set([0x8])
         if taintsource == "__read_chk":
-            info.func_taintedvar_map[info.func_name_map["__read_chk@plt"][0]] = set([0x8])
+            info.func_taintedvar_map[info.func_name_map["__read_chk@plt"][0]] = set([0x10])
         elif taintsource == "fread":
             # print(hex(info.func_name_map["fread@plt"][0]))
-            info.func_taintedvar_map_typed[info.func_name_map["fread@plt"][0]] = set([0x4])
-            # info.func_taintedvar_summary_map_typed[info.func_name_map["fread@plt"][0]] = set([0x4])
+            info.func_taintedvar_map_typed[info.func_name_map["fread@plt"][0]] = set([0x8])
+        # info.func_taintedvar_summary_map_typed[info.func_name_map["fread@plt"][0]] = set([0x4])
         elif taintsource == "fgetc":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
-            info.func_taintedvar_map_typed[info.func_name_map["fgetc@plt"][0]] = set(["eax"])
-            # info.func_taintedvar_summary_map_typed[info.func_name_map["fgetc@plt"][0]] = set(["eax"])
+            info.func_taintedvar_map_typed[info.func_name_map["fgetc@plt"][0]] = set(["rax"])
+        # info.func_taintedvar_summary_map_typed[info.func_name_map["fgetc@plt"][0]] = set(["eax"])
         elif taintsource == "_IO_getc":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
-            info.func_taintedvar_map_typed[info.func_name_map["_IO_getc@plt"][0]] = set(["eax"])
+            info.func_taintedvar_map_typed[info.func_name_map["_IO_getc@plt"][0]] = set(["rax"])
         elif taintsource == "fgets":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
-            info.func_taintedvar_map_typed[info.func_name_map["fgets@plt"][0]] = set([0x4, "eax"])
+            info.func_taintedvar_map_typed[info.func_name_map["fgets@plt"][0]] = set([0x8, "rax"])
         elif taintsource == "fgets_unlocked":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
-            info.func_taintedvar_map_typed[info.func_name_map["fgets_unlocked@plt"][0]] = set([0x4, "eax"])
+            info.func_taintedvar_map_typed[info.func_name_map["fgets_unlocked@plt"][0]] = set([0x8, "rax"])
         elif taintsource == "__isoc99_fscanf":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
             info.func_taintedvar_map_typed[info.func_name_map["__isoc99_fscanf@plt"][0]] = set(
-                [0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24])
+                [0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48])
         elif taintsource == "fscanf":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
             info.func_taintedvar_map_typed[info.func_name_map["fscanf@plt"][0]] = set(
-                [0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24, 0x28])
+                [0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48, 0x50])
         elif taintsource == "_ZNSi4readEPci":
             # print(hex(info.func_name_map["fgetc@plt"][0]))
-            info.func_taintedvar_map_typed[info.func_name_map["_ZNSi4readEPci@plt"][0]] = set([0x4])
+            info.func_taintedvar_map_typed[info.func_name_map["_ZNSi4readEPci@plt"][0]] = set([0x8])
         elif taintsource == "readv":
-            info.func_taintedvar_map_typed[info.func_name_map["readv@plt"][0]] = set([0x8])
+            info.func_taintedvar_map_typed[info.func_name_map["readv@plt"][0]] = set([0x10])
         elif taintsource == "readlink":
-            info.func_taintedvar_map_typed[info.func_name_map["readlink@plt"][0]] = set([0x8])
+            info.func_taintedvar_map_typed[info.func_name_map["readlink@plt"][0]] = set([0x10])
         elif taintsource == "pread64":
-            info.func_taintedvar_map_typed[info.func_name_map["pread64@plt"][0]] = set([0x8])
+            info.func_taintedvar_map_typed[info.func_name_map["pread64@plt"][0]] = set([0x10])
         elif taintsource == "__fread_chk":
-            info.func_taintedvar_map_typed[info.func_name_map["__fread_chk@plt"][0]] = set([0x4])
+            info.func_taintedvar_map_typed[info.func_name_map["__fread_chk@plt"][0]] = set([0x8])
         elif taintsource == "fread_unlocked":
-            info.func_taintedvar_map[info.func_name_map["fread_unlocked@plt"][0]] = set([0x4])
+            info.func_taintedvar_map[info.func_name_map["fread_unlocked@plt"][0]] = set([0x8])
         elif taintsource == "__fread_unlocked_chk":
-            info.func_taintedvar_map[info.func_name_map["__fread_unlocked_chk@plt"][0]] = set([0x4])
+            info.func_taintedvar_map[info.func_name_map["__fread_unlocked_chk@plt"][0]] = set([0x8])
         elif taintsource == "wgetch":
-            info.func_taintedvar_map_typed[info.func_name_map["wgetch@plt"][0]] = set(["eax"])
+            info.func_taintedvar_map_typed[info.func_name_map["wgetch@plt"][0]] = set(["rax"])
         elif taintsource == "getline":
-            info.func_taintedvar_map_typed[info.func_name_map["getline@plt"][0]] = set([0x4])
+            info.func_taintedvar_map_typed[info.func_name_map["getline@plt"][0]] = set([0x8])
         elif taintsource == "__isoc99_scanf":
             info.func_taintedvar_map_typed[info.func_name_map["__isoc99_scanf@plt"][0]] = set(
-                [0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24])
+                [0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48])
         elif taintsource == "recv":
-            print("init recv")
-            info.func_taintedvar_map_typed[info.func_name_map["recv@plt"][0]] = set([0x8])
+            # info.func_taintedvar_map_typed[info.func_name_map["recv@plt"][0]] = set([0x10])
+            info.func_taintedvar_map_typed[info.func_name_map["recv@plt"][0]] = set(['rsi'])
         elif taintsource == "recvfrom":
-            info.func_taintedvar_map_typed[info.func_name_map["recvfrom@plt"][0]] = set([0x8])
+            info.func_taintedvar_map_typed[info.func_name_map["recvfrom@plt"][0]] = set([0x10])
         elif taintsource == "gnutls_record_recv":
-            info.func_taintedvar_map_typed[info.func_name_map["gnutls_record_recv@plt"][0]] = set([0x8])
-        # jpeg_read_header
-        # jpeg_read_raw_data
-        # png_read_image
+            info.func_taintedvar_map_typed[info.func_name_map["gnutls_record_recv@plt"][0]] = set([0x10])
+    # jpeg_read_header
+    # jpeg_read_raw_data
+    # png_read_image
 
     intra_ite = 0
     inter_ite = 0
@@ -2591,7 +2605,9 @@ def binary_static_taint_typed():
     # iterate
     # for i in range(1):
     while True:
-
+        count1 = 0
+        count2 = 0
+        count3 = 0
         old_tainted_insn_addresses_typed = copy.deepcopy(info.tainted_insn_addresses_typed)
 
         # in reversed topological order
@@ -2603,7 +2619,8 @@ def binary_static_taint_typed():
             # print(func_name)
             # print(hex(func_addr))
             # print(hex(func_end_addr))
-
+            if func_name=="main":
+                print("main")
             if func_addr not in info.insnsmap:
                 continue
             if func_addr not in info.cfg.kb.functions:
@@ -2649,7 +2666,7 @@ def binary_static_taint_typed():
                 func_para_access = info.funcaddr_para_access_map[func_addr]
                 func_para_index_set = set(range(func_para_access)).union(set([func_para_access])) - set([0])
                 for func_para_index in sorted(func_para_index_set):
-                    func_para_values.append(int(4 * func_para_index))
+                    func_para_values.append(int(8 * func_para_index))
 
             # print("**")
             # for func_para_value in func_para_values:
@@ -2657,6 +2674,8 @@ def binary_static_taint_typed():
 
             # find all call site paras value
             callsite_para_values_map = {}
+            callsite_reg_para_values_map = {}
+            callsite_reg_xmm_para_values_map = {}
             for callsite in callsites:
                 # get esp value
                 if callsite in info.insn_stack_offset_map:
@@ -2665,8 +2684,22 @@ def binary_static_taint_typed():
                         callsite_para_access = info.callsite_para_access_map[callsite]
                         callsite_para_values = []
                         for callsite_para_index in range(callsite_para_access):
-                            callsite_para_values.append(int(4 * callsite_para_index + esp_value))
+                            callsite_para_values.append(int(8 * callsite_para_index + esp_value))
                         callsite_para_values_map[callsite] = copy.deepcopy(callsite_para_values)
+                    if callsite in info.callsite_reg_para_access_map:
+                        callsite_reg_para_access = info.callsite_reg_para_access_map[callsite]
+                        callsite_reg_para_values = []
+                        for callsite_reg_para_index in range(callsite_reg_para_access):
+                            callsite_reg_para_values.append(reg_para_list[callsite_reg_para_index]) #寄存器名字
+                            # callsite_reg_para_values.append(int(8 * callsite_para_index + esp_value))
+                        callsite_reg_para_values_map[callsite] = copy.deepcopy(callsite_reg_para_values)
+                    if callsite in info.callsite_reg_xmm_para_access_map:
+                        callsite_reg_xmm_para_access = info.callsite_reg_xmm_para_access_map[callsite]
+                        callsite_reg_xmm_para_values = []
+                        for callsite_reg_xmm_para_index in range(callsite_reg_xmm_para_access):
+                            callsite_reg_xmm_para_values.append(reg_xmm_para_list[callsite_reg_xmm_para_index])#xmm寄存器名字
+                            # callsite_reg_xmm_para_values.append(int(8 * callsite_para_index + esp_value))
+                        callsite_reg_xmm_para_values_map[callsite] = copy.deepcopy(callsite_reg_xmm_para_values)
 
             # print("***")
             # for callsite in callsites:
@@ -2674,22 +2707,21 @@ def binary_static_taint_typed():
             #	for callsite_para_value in callsite_para_values_map[callsite]:
             #		print(hex(callsite_para_value))
 
-            print("---\n1")
-            print(hex(func_addr))
-            print(info.func_taintedvar_map_typed[func_addr])
+            # print("1")
+            # print(hex(func_addr))
+            # print(info.func_taintedvar_map_typed[func_addr])
             # print(info.func_taintedvar_summary_map_typed[func_addr])
 
             while_true_start = time.time()
             while True:
                 old_func_taintedvar_map_typed = copy.deepcopy(info.func_taintedvar_map_typed[func_addr])
 
-                print("2")
-                print(info.func_taintedvar_map_typed[func_addr])
+                # print("2")
+                # print(info.func_taintedvar_map_typed[func_addr])
                 # print(info.func_taintedvar_summary_map_typed[func_addr])
 
                 intra_ite = intra_ite + 1
 
-                print(func_name)
                 if not func_name.endswith("@plt"):
                     # for each para
                     # if func_addr in info.funcaddr_para_access_map and func_addr in info.func_summary_map:
@@ -2706,26 +2738,25 @@ def binary_static_taint_typed():
                     for callsite in callsites:
                         # print(hex(callsite))
                         if callsite in callsite_para_values_map and callsite in info.insn_summary_map and callsite in info.insn_stack_offset_map:
-                            print(hex(callsite))
+                            # print(hex(callsite))
                             esp_value = info.insn_stack_offset_map[callsite]
 
-                            # for each call site parameter
+                            # for each call site parameter 堆栈的参数
                             for callsite_para_value in callsite_para_values_map[callsite]:
 
                                 # check how func paras flow to callsites
                                 # caller -> callee
                                 if callsite_para_value in info.insn_summary_map[callsite]:
-                                    print("caller -> callee", info.func_taintedvar_map_typed[func_addr])
                                     if len(info.insn_summary_map[callsite][callsite_para_value].intersection(
                                             info.func_taintedvar_map_typed[func_addr])) != 0:
-                                        print("2.1")
+                                        # print("2.1")
                                         # add CALLSITE_P1(-P10)_0x(callsite) to caller
-                                        callsite_para_index = int((callsite_para_value - esp_value) / 4 + 1)
+                                        callsite_para_index = int((callsite_para_value - esp_value) / 8 + 1)
                                         value = "CALLSITE_P" + str(callsite_para_index) + "_" + hex(callsite)
                                         info.func_taintedvar_map_typed[func_addr].add(value)
-                                        print("2.2")
+                                        # print("2.2")
                                         # add para offset value to callee
-                                        callee_para_value = int(callsite_para_index * 4)
+                                        callee_para_value = int(callsite_para_index * 8)
                                         if callsite in info.callsite_map:
                                             for callee in sorted(info.callsite_map[callsite]):
                                                 info.func_taintedvar_map_typed[callee].add(callee_para_value)
@@ -2737,72 +2768,74 @@ def binary_static_taint_typed():
                                                     # if plt func
                                                     if callee_name.endswith("@plt"):
                                                         if callee_name == "memmove@plt":
-                                                            if 0x8 in info.func_taintedvar_map_typed[callee] \
-                                                                    and 0x4 not in info.func_taintedvar_map_typed[
+                                                            if 0x10 in info.func_taintedvar_map_typed[callee] \
+                                                                    and 0x8 not in info.func_taintedvar_map_typed[
                                                                 callee]:
                                                                 info.func_taintedvar_map_typed[callee] = copy.deepcopy( \
                                                                     info.func_taintedvar_map_typed[callee].union(
-                                                                        set([0x4])))
+                                                                        set([0x8])))
                                                         elif callee_name == "memcopy@plt":
-                                                            if 0x8 in info.func_taintedvar_map_typed[callee] \
-                                                                    and 0x4 not in info.func_taintedvar_map_typed[
+                                                            if 0x10 in info.func_taintedvar_map_typed[callee] \
+                                                                    and 0x8 not in info.func_taintedvar_map_typed[
                                                                 callee]:
                                                                 info.func_taintedvar_map_typed[callee] = copy.deepcopy( \
                                                                     info.func_taintedvar_map_typed[callee].union(
-                                                                        set([0x4])))
+                                                                        set([0x8])))
                                                         elif callee_name == "memset@plt":
-                                                            if 0x8 in info.func_taintedvar_map_typed[callee] \
-                                                                    and 0x4 not in info.func_taintedvar_map_typed[
+                                                            if 0x10 in info.func_taintedvar_map_typed[callee] \
+                                                                    and 0x8 not in info.func_taintedvar_map_typed[
                                                                 callee]:
                                                                 info.func_taintedvar_map_typed[callee] = copy.deepcopy( \
                                                                     info.func_taintedvar_map_typed[callee].union(
-                                                                        set([0x4])))
+                                                                        set([0x8])))
                                                         elif callee_name == "strcpy@plt":
-                                                            if 0x8 in info.func_taintedvar_map_typed[callee] \
-                                                                    and 0x4 not in info.func_taintedvar_map_typed[
+                                                            if 0x10 in info.func_taintedvar_map_typed[callee] \
+                                                                    and 0x8 not in info.func_taintedvar_map_typed[
                                                                 callee]:
                                                                 info.func_taintedvar_map_typed[callee] = copy.deepcopy( \
                                                                     info.func_taintedvar_map_typed[callee].union(
-                                                                        set([0x4])))
+                                                                        set([0x8])))
                                                         elif callee_name == "strncpy@plt":
-                                                            if 0x8 in info.func_taintedvar_map_typed[callee] \
-                                                                    and 0x4 not in info.func_taintedvar_map_typed[
+                                                            if 0x10 in info.func_taintedvar_map_typed[callee] \
+                                                                    and 0x8 not in info.func_taintedvar_map_typed[
                                                                 callee]:
                                                                 info.func_taintedvar_map_typed[callee] = copy.deepcopy( \
                                                                     info.func_taintedvar_map_typed[callee].union(
-                                                                        set([0x4])))
+                                                                        set([0x8])))
                                                         elif callee_name == "strtol@plt":
-                                                            if 0x4 in info.func_taintedvar_map_typed[callee] \
+                                                            if 0x8 in info.func_taintedvar_map_typed[callee] \
                                                                     and (
-                                                                    0x8 not in info.func_taintedvar_map_typed[callee] \
-                                                                    or "eax" not in info.func_taintedvar_map_typed[
+                                                                    0x10 not in info.func_taintedvar_map_typed[callee] \
+                                                                    or "rax" not in info.func_taintedvar_map_typed[
                                                                         callee]):
                                                                 info.func_taintedvar_map_typed[callee] = copy.deepcopy( \
                                                                     info.func_taintedvar_map_typed[callee].union(
-                                                                        set([0x8, "eax"])))
+                                                                        set([0x10, "rax"])))
                                                         elif callee_name == "gcvt@plt":
-                                                            if 0x4 in info.func_taintedvar_map_typed[callee] \
-                                                                    and 0xc not in info.func_taintedvar_map_typed[
+                                                            if 0x8 in info.func_taintedvar_map_typed[callee] \
+                                                                    and 0x18 not in info.func_taintedvar_map_typed[
                                                                 callee]:
                                                                 info.func_taintedvar_map_typed[callee] = copy.deepcopy( \
                                                                     info.func_taintedvar_map_typed[callee].union(
-                                                                        set([0xc])))
+                                                                        set([0x18])))
 
-                                        # print("2.3")
-                                        # add ret offset value to callee
-                                        # if callsite in info.callsite_map:
-                                        #	for callee in sorted(info.callsite_map[callsite]):
-                                        #		if callee in info.func_summary_map and "eax" in info.func_summary_map[callee] \
-                                        #			and callee_para_value in info.func_summary_map[callee]["eax"]:
-                                        #			info.func_taintedvar_map_typed[callee].add("eax")
+                                    # print("2.3")
+                                    # add ret offset value to callee
+                                    # if callsite in info.callsite_map:
+                                    #	for callee in sorted(info.callsite_map[callsite]):
+                                    #		if callee in info.func_summary_map and "eax" in info.func_summary_map[callee] \
+                                    #			and callee_para_value in info.func_summary_map[callee]["eax"]:
+                                    #			info.func_taintedvar_map_typed[callee].add("eax")
+
+
 
                                 # check how callsites paras and rets flow to caller
                                 # callee -> caller
-                                callsite_para_index = int((callsite_para_value - esp_value) / 4 + 1)
+                                callsite_para_index = int((callsite_para_value - esp_value) / 8 + 1)
                                 para_value = "CALLSITE_P" + str(callsite_para_index) + "_" + hex(callsite)
                                 # CALLSITE_EAX_0x(callsite)
-                                ret_value = "CALLSITE_EAX_" + hex(callsite)
-                                callee_para_value = int(callsite_para_index * 4)
+                                ret_value = "CALLSITE_RAX_" + hex(callsite)
+                                callee_para_value = int(callsite_para_index * 8)
                                 # print(hex(callsite))
                                 if callsite in info.callsite_map:
                                     for callee in sorted(info.callsite_map[callsite]):
@@ -2816,7 +2849,7 @@ def binary_static_taint_typed():
                                             nonpointer = False
 
                                             # the index starts from 0
-                                            callsite_para_index_1 = int((callsite_para_value - esp_value) / 4)
+                                            callsite_para_index_1 = int((callsite_para_value - esp_value) / 8)
                                             if callsite in info.bbendaddr_bbstartaddr_map:
                                                 call_insn_bb_addr = info.bbendaddr_bbstartaddr_map[callsite]
                                                 from_bb = info.cfg.model.get_any_node(call_insn_bb_addr)
@@ -2857,7 +2890,7 @@ def binary_static_taint_typed():
                                                                 # print(info.funcaddr_para_details_map[callee_func_addr])
                                                                 pass
 
-                                                                # do not update this parameter
+                                                            # do not update this parameter
 
                                             # only add when para is a pointer
                                             # if nonpointer == False:
@@ -2882,26 +2915,70 @@ def binary_static_taint_typed():
                                             if callsite_para_value in info.insn_summary_map[callsite]:
                                                 for stack_contained_value in info.insn_summary_map[callsite][
                                                     callsite_para_value]:
-                                                    if stack_contained_value != "eax":
+                                                    if stack_contained_value != "rax":
                                                         info.func_taintedvar_map_typed[func_addr].add(
                                                             stack_contained_value)
-                                                    # if isinstance(stack_contained_value, int):
-                                                    #	print(hex(stack_contained_value))
+                                                # if isinstance(stack_contained_value, int):
+                                                #	print(hex(stack_contained_value))
 
                                         # if callee return value is tainted, add it to caller
-                                        if "eax" in info.func_taintedvar_map_typed[callee]:
+                                        if "rax" in info.func_taintedvar_map_typed[callee]:
                                             # print("2.5")
                                             # add CALLSITE_EAX_0x(callsite)
                                             info.func_taintedvar_map_typed[func_addr].add(ret_value)
 
-                            # if callsite has no para
-                            if len(callsite_para_values_map[callsite]) == 0:
-                                # print(hex(callsite))
+                            # 对于寄存器传参
+                            for callsite_reg_para_value in callsite_reg_para_values_map[callsite]:
+                                # caller -> callee
+                                if callsite_reg_para_value in info.insn_summary_map[callsite]:
+                                    if len(info.insn_summary_map[callsite][callsite_reg_para_value].intersection(
+                                        info.func_taintedvar_map_typed[func_addr])) != 0:
+                                        # add CALLSITE_R1(-R10)_0x(callsite) to caller
+                                        value = "CALLSITE_" + callsite_reg_para_value + "_" + hex(callsite)
+                                        info.func_taintedvar_map_typed[func_addr].add(value)
+
+                                        # add para reg name to callee
+                                        if callsite in info.callsite_map:
+                                            for callee in sorted(info.callsite_map[callsite]):
+                                                info.func_taintedvar_map_typed[callee].add(callsite_reg_para_value)
+                                # callee -> caller (pointer)
+                                para_value = "CALLSITE_" + callsite_reg_para_value + "_" + hex(callsite)
                                 ret_value = "CALLSITE_EAX_" + hex(callsite)
                                 if callsite in info.callsite_map:
                                     for callee in sorted(info.callsite_map[callsite]):
+                                        # if callee paras are tainted, add it to caller
+                                        if callsite_reg_para_value in info.func_taintedvar_map_typed[callee]:
+                                            #中间对于指针的判断和处理都被注释了
+                                            # add CALLSITE_P1(-P10)_0x(callsite)
+                                            info.func_taintedvar_map_typed[func_addr].add(para_value)
+                                            # add callsite_para_value
+                                            info.func_taintedvar_map_typed[func_addr].add(callsite_reg_para_value)
+                                            # add values inside callsite_para_value
+                                            # 直接当成所有参数都是指针来处理
+                                            if callsite_reg_para_value in info.insn_summary_map[callsite]:
+                                                for stack_contained_value in info.insn_summary_map[callsite][
+                                                    callsite_reg_para_value]:
+                                                    if stack_contained_value != "rax":
+                                                        info.func_taintedvar_map_typed[func_addr].add(
+                                                            stack_contained_value)
+                                                        # if callee return value is tainted, add it to caller
+                                            if "rax" in info.func_taintedvar_map_typed[callee]:
+                                                # print("2.5")
+                                                # add CALLSITE_EAX_0x(callsite)
+                                                info.func_taintedvar_map_typed[func_addr].add(ret_value)
+
+                            # 对于xmm寄存器传参 暂不实现（因为没有这样的指令）
+                            # for callsite_reg_xmm_para_value in callsite_reg_xmm_para_values_map[callsite]:
+
+
+                            # if callsite has no para
+                            if len(callsite_reg_para_values_map[callsite]) == 0:
+                                # print(hex(callsite))
+                                ret_value = "CALLSITE_RAX_" + hex(callsite)
+                                if callsite in info.callsite_map:
+                                    for callee in sorted(info.callsite_map[callsite]):
                                         # if callee return value is tainted, add it to caller
-                                        if "eax" in info.func_taintedvar_map_typed[callee]:
+                                        if "rax" in info.func_taintedvar_map_typed[callee]:
                                             # print("2.5")
                                             # add CALLSITE_EAX_0x(callsite)
                                             info.func_taintedvar_map_typed[func_addr].add(ret_value)
@@ -2931,31 +3008,31 @@ def binary_static_taint_typed():
                                 if ab_loc_1 in info.func_taintedvar_map_typed[func_addr]:
                                     info.func_taintedvar_map_typed[func_addr].add(ab_loc)
 
-                                    # if ab_loc in info.gpr:
-                                    #	#if ab_loc in info.insn_summary_map[addr][ab_loc]:
-                                    #	#	info.func_taintedvar_map_typed[func_addr].add(ab_loc)
-                                    #	info.func_taintedvar_map_typed[func_addr].add(ab_loc)
-                                    # else:
-                                    #	info.func_taintedvar_map_typed[func_addr].add(ab_loc)
+                                # if ab_loc in info.gpr:
+                                #	#if ab_loc in info.insn_summary_map[addr][ab_loc]:
+                                #	#	info.func_taintedvar_map_typed[func_addr].add(ab_loc)
+                                #	info.func_taintedvar_map_typed[func_addr].add(ab_loc)
+                                # else:
+                                #	info.func_taintedvar_map_typed[func_addr].add(ab_loc)
 
-                                    # print("*")
-                                    # if isinstance(ab_loc, int):
-                                    #	print(hex(ab_loc))
-                                    # else:
-                                    #	print(ab_loc)
-                                    # if isinstance(ab_loc_1, int):
-                                    #	print(hex(ab_loc_1))
-                                    # else:
-                                    #	print(ab_loc_1)
-                                    # break
+                                # print("*")
+                                # if isinstance(ab_loc, int):
+                                #	print(hex(ab_loc))
+                                # else:
+                                #	print(ab_loc)
+                                # if isinstance(ab_loc_1, int):
+                                #	print(hex(ab_loc_1))
+                                # else:
+                                #	print(ab_loc_1)
+                                # break
 
                             # collect gvars
                             if isinstance(ab_loc,
                                           int) and ab_loc >= info.mmin_data_section_addr and ab_loc <= info.mmax_data_section_addr:
                                 func_gvars.add(ab_loc)
-                                # print("*")
-                                # print(hex(addr))
-                                # print(hex(ab_loc))
+                            # print("*")
+                            # print(hex(addr))
+                            # print(hex(ab_loc))
                     addr = findnextinsaddr(addr)
 
                 # print("4")
@@ -3113,7 +3190,7 @@ def binary_static_taint_typed():
                                         src_op_base_reg_name = info.insnsmap[addr].reg_name(src_op.value.mem.base)
 
                                         # mov stack var via base
-                                        if src_op_base_reg_name == "esp" and src_op.value.mem.index == 0:
+                                        if src_op_base_reg_name == "rsp" and src_op.value.mem.index == 0:
                                             # print(src_op.value.mem.disp)
                                             if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                 addr] != None:
@@ -3182,7 +3259,7 @@ def binary_static_taint_typed():
                                     elif src_op.value.mem.base == 0:
                                         # mov stack var via index
                                         if src_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                src_op.value.mem.index) == "esp":
+                                                src_op.value.mem.index) == "rsp":
                                             if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                 addr] != None:
                                                 value = info.insn_stack_offset_map[
@@ -3226,7 +3303,7 @@ def binary_static_taint_typed():
                                     dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                     # mov into stack var via base
-                                    if dest_op_base_reg_name == "esp" and dest_op.value.mem.index == 0:
+                                    if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -3298,7 +3375,7 @@ def binary_static_taint_typed():
 
                                     # mov into stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "esp":
+                                            dest_op.value.mem.index) == "rsp":
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -3331,7 +3408,7 @@ def binary_static_taint_typed():
                                     dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                     # mov into stack var via base
-                                    if dest_op_base_reg_name == "esp" and dest_op.value.mem.index == 0:
+                                    if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -3383,7 +3460,7 @@ def binary_static_taint_typed():
                                 else:
                                     # mov into stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "esp":
+                                            dest_op.value.mem.index) == "rsp":
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -3419,7 +3496,7 @@ def binary_static_taint_typed():
 
                                     # dest mem: stack var via base
                                     if info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.base) == "esp" and dest_op.value.mem.index == 0:
+                                            dest_op.value.mem.base) == "rsp" and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -3472,7 +3549,7 @@ def binary_static_taint_typed():
                                 else:
                                     # dest mem: stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "esp":
+                                            dest_op.value.mem.index) == "rsp":
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -3491,15 +3568,14 @@ def binary_static_taint_typed():
                                         # print(hex(addr))
                                         # print(hex(value))
                                         values_used_set.add(value)
-                # print("we meet check!")
+
                 if len(values_used_set.intersection(ab_locs_containing_tainted_value)) != 0:
-                    print("add1", addr)
-                    count1 += 1
                     info.tainted_insn_addresses_typed.add(addr)
-                    print("*")
-                    print(hex(addr))
-                    print(values_used_set)
-                    print(ab_locs_containing_tainted_value)
+                    count1 += 1
+                # print("*")
+                # print(hex(addr))
+                # print(values_used_set)
+                # print(ab_locs_containing_tainted_value)
 
                 # add original taint sources to tainted insn addresses
                 if addr in info.callsite_map and len(info.callsite_map[addr]) >= 1:
@@ -3509,14 +3585,13 @@ def binary_static_taint_typed():
                         if callee_name.endswith("@plt"):
                             callee_short_name = callee_name[:callee_name.index("@plt")]
                             if callee_short_name in info.args.taintsources:
-                                print("add2", addr)
                                 count2 += 1
                                 info.tainted_insn_addresses_typed.add(addr)
 
                 addr = findnextinsaddr(addr)
 
-            # for tainted_insn_addr in sorted(info.tainted_insn_addresses_typed):
-            #	print(hex(tainted_insn_addr))
+        # for tainted_insn_addr in sorted(info.tainted_insn_addresses_typed):
+        #	print(hex(tainted_insn_addr))
 
         inter_ite = inter_ite + 1
         if inter_ite == 1:
@@ -3543,14 +3618,14 @@ def binary_static_taint_typed():
     #		else:
     #			print(ab_loc)
 
-    for csinsn in info.insns:
-        if csinsn.id in [6, 7, 8, 25, 48, 49, 56, 71, 72, 73, 74, 77, 79, 80, 81, 82, \
-                         85, 87, 88, 90, 91, 92, 94, 147, 322, 323, 332, 333, 334, \
-                         449, 477, 481, 566, 588, 621]:
-            print("add3", csinsn.address)
-            count3 += 1
-            info.tainted_insn_addresses_typed.add(csinsn.address)
-    #		print(hex(csinsn.address))
+    # for csinsn in info.insns:
+    # 	if csinsn.id in [6,7,8,25,48,49,56,71,72,73,74,77,79,80,81,82, \
+    #                     85,87,88,90,91,92,94,147,322,323,332,333,334, \
+    #                     449,477,481,566,588,621]:
+    # 		count3+=1
+    # 		info.tainted_insn_addresses_typed.add(csinsn.address)
+    #
+    # 		print(hex(csinsn.address))
 
     tainted_set = set()
     for func_addr in sorted(info.func_taintedvar_map_typed):
@@ -3561,10 +3636,9 @@ def binary_static_taint_typed():
     tainted_count = len(tainted_set)
     # print(info.ab_count)
     # print(info.ab_count - tainted_count)
-    print("count1:", count1)
-    print("count2:", count2)
-    print("count3:", count3)
-
+    print("count1", count1)
+    print("count2", count2)
+    print("count3", count3)
     print("last iteration untainted var count: " + str(info.ab_count - tainted_count))
     print("intra procedural analysis iteration times: " + str(intra_ite))
     print("inter procedural analysis iteration times: " + str(inter_ite))
@@ -3572,6 +3646,7 @@ def binary_static_taint_typed():
     # print("+++++")
     # for tainted_insn_addr in sorted(info.tainted_insn_addresses_typed):
     #	print(hex(tainted_insn_addr))
+
     info.tainted_insn_typed_output_file = info.binaryfile + "_tainted_insn_typed_output_file"
     f = open(info.tainted_insn_typed_output_file, "w")
     for tainted_insn_addr in sorted(info.tainted_insn_addresses_typed):
@@ -3822,20 +3897,20 @@ def generate_function_summary_typed():
                     #		print("*" + ab_loc)
                     for ab_loc_1 in info.insn_summary_map_typed[addr][ab_loc]:
                         if isinstance(ab_loc_1, int):
-                            if ab_loc_1 >= 0x4 and ab_loc_1 <= 0x28:
+                            if ab_loc_1 >= 0x8 and ab_loc_1 <= 0x50:
                                 uninit1_ab_set.add(ab_loc_1)
                         else:
-                            if ab_loc_1.startswith("e") and ab_loc_1 != "esp" and ab_loc_1 != "ebp":
+                            if ab_loc_1.startswith("r") and ab_loc_1 != "rsp" and ab_loc_1 != "rbp":
                                 if ab_loc_1 not in define_set:
                                     uninit1_ab_set.add(ab_loc_1)
 
                     if isinstance(ab_loc, int):
-                        if ab_loc >= 0x4 and ab_loc <= 0x28:
+                        if ab_loc >= 0x8 and ab_loc <= 0x50:
                             uninit1_ab_set.add(ab_loc)
                     else:
-                        if ab_loc.startswith("e") and ab_loc != "esp" and ab_loc != "ebp":
+                        if ab_loc.startswith("r") and ab_loc != "rsp" and ab_loc != "rbp":
                             define_set.add(ab_loc)
-                            # print("*" + ab_loc)
+                        # print("*" + ab_loc)
             addr = findnextinsaddr(addr)
         # uninit1_count = uninit1_count + len(uninit1_ab_set)
         # print(uninit1_ab_set)
@@ -3847,17 +3922,17 @@ def generate_function_summary_typed():
                 for callee in sorted(info.callsite_map[callsite]):
                     # callee_set.add(callee)
                     if callsite in info.insn_stack_offset_map:
-                        esp = info.insn_stack_offset_map[callsite] - 4
+                        rsp = info.insn_stack_offset_map[callsite] - 8
                         if callee not in callee_addresses:
                             callee_addresses.append(callee)
-                            callee_esp_lists.append(esp)
+                            callee_esp_lists.append(rsp)
         index = 0
         for callee in sorted(callee_addresses):
             # print("*")
             # print(hex(callee))
             # print(hex(callee_esp_lists[index]))
 
-            esp = callee_esp_lists[index]
+            rsp = callee_esp_lists[index]
             func_addr = callee
             func_end_addr = info.func_addr_map[func_addr][1]
             addr = func_addr
@@ -3869,19 +3944,19 @@ def generate_function_summary_typed():
                         # else:
                         #	print(ab_loc)
                         if isinstance(ab_loc, int):
-                            if ab_loc >= -esp + 0x4 and ab_loc <= -esp + 0x28:
+                            if ab_loc >= -rsp + 0x8 and ab_loc <= -rsp + 0x50:
                                 uninit1_ab_set.add(ab_loc)
                         else:
-                            if ab_loc.startswith("e") and ab_loc != "esp" and ab_loc != "ebp":
+                            if ab_loc.startswith("r") and ab_loc != "rsp" and ab_loc != "rbp":
                                 uninit1_ab_set.add(ab_loc)
-                                # print("*" + ab_loc)
+                            # print("*" + ab_loc)
                         for ab_loc_1 in info.insn_summary_map_typed[addr][ab_loc]:
                             if isinstance(ab_loc_1, int):
-                                if ab_loc_1 >= -esp + 0x4 and ab_loc_1 <= -esp + 0x28:
+                                if ab_loc_1 >= -rsp + 0x8 and ab_loc_1 <= -rsp + 0x50:
                                     uninit1_ab_set.add(ab_loc_1)
-                            # else:
-                            #	if ab_loc_1.startswith("e") and ab_loc_1 != "esp" and ab_loc_1 != "ebp":
-                            #		uninit1_ab_set.add(ab_loc_1)
+                        # else:
+                        #	if ab_loc_1.startswith("e") and ab_loc_1 != "esp" and ab_loc_1 != "ebp":
+                        #		uninit1_ab_set.add(ab_loc_1)
                 addr = findnextinsaddr(addr)
 
             index = index + 1
@@ -3931,23 +4006,23 @@ def generate_function_summary_typed():
                         #		print("*" + ab_loc)
                         for ab_loc_1 in info.insn_summary_map_typed[addr][ab_loc]:
                             if isinstance(ab_loc_1, int):
-                                if ab_loc_1 >= 0x4 and ab_loc_1 <= 0x28:
+                                if ab_loc_1 >= 0x8 and ab_loc_1 <= 0x50:
                                     uninit2_ab_set.add(ab_loc_1)
                             else:
-                                if ab_loc_1.startswith("e") and ab_loc_1 != "esp" and ab_loc_1 != "ebp":
+                                if ab_loc_1.startswith("r") and ab_loc_1 != "rsp" and ab_loc_1 != "rbp":
                                     if ab_loc_1 not in define_set:
                                         uninit2_ab_set.add(ab_loc_1)
 
                         if isinstance(ab_loc, int):
-                            if ab_loc >= 0x4 and ab_loc <= 0x28:
+                            if ab_loc >= 0x8 and ab_loc <= 0x50:
                                 uninit2_ab_set.add(ab_loc)
                         else:
-                            if ab_loc.startswith("e") and ab_loc != "esp" and ab_loc != "ebp":
+                            if ab_loc.startswith("r") and ab_loc != "rsp" and ab_loc != "rbp":
                                 define_set.add(ab_loc)
-                                # print("*" + ab_loc)
+                            # print("*" + ab_loc)
                 addr = findnextinsaddr(addr)
             uninit2_count = uninit2_count + len(uninit2_ab_set)
-            # print(uninit2_ab_set)
+        # print(uninit2_ab_set)
 
         # print(uninit2_count)
         print("uninitialized var 2 count: " + str(uninit2_count))
@@ -3961,7 +4036,7 @@ def generate_function_summary_typed():
                 if addr in info.insn_summary_map_typed:
                     for ab_loc in info.insn_summary_map_typed[addr]:
                         for ab_loc_1 in info.insn_summary_map_typed[addr][ab_loc]:
-                            if not isinstance(ab_loc_1, int) and ab_loc_1.startswith("CALLSITE_EAX_"):
+                            if not isinstance(ab_loc_1, int) and ab_loc_1.startswith("CALLSITE_RAX_"):
                                 # print(ab_loc_1)
                                 # print(hex(int(ab_loc_1[13:], 16)))
                                 callsite_addr = int(ab_loc_1[13:], 16)
@@ -3973,7 +4048,7 @@ def generate_function_summary_typed():
                                     if callee_name.endswith("@plt"):
                                         # print(callee_name)
                                         uninit3_ab_set.add(ab_loc_1)
-                                        # uninit3_ab_set.add(callee_name)
+                                    # uninit3_ab_set.add(callee_name)
                 addr = findnextinsaddr(addr)
 
         uninit3_count = uninit3_count + len(uninit3_ab_set)
@@ -4090,7 +4165,7 @@ def generate_function_summary_typed():
                                         ab_loc = call_insn_esp_value + index * 4
                                         # print(str(ab_loc))
                                         callsite_para_ab_locs.append([int(ab_loc), int(index + 1)])
-                                    # print(callsite_para_ab_locs)
+                                # print(callsite_para_ab_locs)
                             else:
                                 if func_addr in info.cfg.kb.functions:
                                     # print(hex(addr))
@@ -4260,13 +4335,13 @@ def generate_function_summary_typed():
                                         insn_summary_map_typed[succ][ab_loc] = \
                                             copy.deepcopy(insn_summary_map_typed[succ][ab_loc].union(added_value_set))
 
-                                        # print("*")
-                                        # print(hex(succ))
-                                        # if isinstance(ab_loc, int):
-                                        #	print(hex(ab_loc))
-                                        # else:
-                                        #	print(ab_loc)
-                                        # print(insn_summary_map_typed[succ][ab_loc])
+                                    # print("*")
+                                    # print(hex(succ))
+                                    # if isinstance(ab_loc, int):
+                                    #	print(hex(ab_loc))
+                                    # else:
+                                    #	print(ab_loc)
+                                    # print(insn_summary_map_typed[succ][ab_loc])
 
                             # update return value eax in call fall through insn
                             # if func_return == True:
@@ -4282,10 +4357,10 @@ def generate_function_summary_typed():
                                 added_value = "HEAP_POINTER_" + hex(addr)
                             # normal call insn
                             else:
-                                added_value = "CALLSITE_EAX_" + hex(addr)
+                                added_value = "CALLSITE_RAX_" + hex(addr)
 
                             added_value_set = set([added_value])
-                            ab_loc = "eax"
+                            ab_loc = "rax"
                             if ab_loc not in insn_summary_map_typed[succ]:
                                 insn_summary_map_typed[succ][ab_loc] = set()
                             if ab_loc not in insn_summary_map_typed[addr]:
@@ -4298,10 +4373,10 @@ def generate_function_summary_typed():
                             insn_summary_map_typed[succ][ab_loc] = \
                                 copy.deepcopy((insn_summary_map_typed[succ][ab_loc].union(added_value_set) - \
                                                insn_summary_map_typed[addr][ab_loc]).union(old[ab_loc]))
-                            # print("*")
-                            # print(hex(succ))
-                            # print(ab_loc)
-                            # print(insn_summary_map_typed[succ][ab_loc])
+                        # print("*")
+                        # print(hex(succ))
+                        # print(ab_loc)
+                        # print(insn_summary_map_typed[succ][ab_loc])
 
                         # update value sets
                         if addr in info.insnsmap:
@@ -4319,7 +4394,7 @@ def generate_function_summary_typed():
                                     if insn.mnemonic.startswith("push"):
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
-                                            write_to_stack_addr = info.insn_stack_offset_map[addr] - 4
+                                            write_to_stack_addr = info.insn_stack_offset_map[addr] - 8
                                             if reg_name not in insn_summary_map_typed[addr]:
                                                 insn_summary_map_typed[addr][reg_name] = set([reg_name])
                                             if write_to_stack_addr not in insn_summary_map_typed[succ]:
@@ -4437,7 +4512,7 @@ def generate_function_summary_typed():
                                                     src_op.value.mem.base)
 
                                                 # mov stack var via base
-                                                if src_op_base_reg_name == "esp" and src_op.value.mem.index == 0:
+                                                if src_op_base_reg_name == "rsp" and src_op.value.mem.index == 0:
                                                     # print(src_op.value.mem.disp)
                                                     if addr in info.insn_stack_offset_map and \
                                                             info.insn_stack_offset_map[addr] != None:
@@ -4555,7 +4630,7 @@ def generate_function_summary_typed():
                                             elif src_op.value.mem.base == 0:
                                                 # mov stack var via index
                                                 if src_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                        src_op.value.mem.index) == "esp":
+                                                        src_op.value.mem.index) == "rsp":
                                                     if addr in info.insn_stack_offset_map and \
                                                             info.insn_stack_offset_map[addr] != None:
                                                         value = info.insn_stack_offset_map[
@@ -4625,7 +4700,7 @@ def generate_function_summary_typed():
                                             dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                             # mov into stack var via base
-                                            if dest_op_base_reg_name == "esp" and dest_op.value.mem.index == 0:
+                                            if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -4746,7 +4821,7 @@ def generate_function_summary_typed():
 
                                             # mov into stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "esp":
+                                                    dest_op.value.mem.index) == "rsp":
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -4803,7 +4878,7 @@ def generate_function_summary_typed():
                                             dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                             # mov into stack var via base
-                                            if dest_op_base_reg_name == "esp" and dest_op.value.mem.index == 0:
+                                            if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -4856,7 +4931,7 @@ def generate_function_summary_typed():
                                         else:
                                             # mov into stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "esp":
+                                                    dest_op.value.mem.index) == "rsp":
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -4931,7 +5006,7 @@ def generate_function_summary_typed():
 
                                             # dest mem: stack var via base
                                             if info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.base) == "esp" and dest_op.value.mem.index == 0:
+                                                    dest_op.value.mem.base) == "rsp" and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -4985,7 +5060,7 @@ def generate_function_summary_typed():
                                         else:
                                             # dest mem: stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "esp":
+                                                    dest_op.value.mem.index) == "rsp":
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -5075,8 +5150,8 @@ def generate_function_summary_typed():
                             info.func_summary_map_typed[func_addr][ab_loc] = set()
                         info.func_summary_map_typed[func_addr][ab_loc] = copy.deepcopy(
                             info.func_summary_map_typed[func_addr][ab_loc].union(insn_summary_map_typed[addr][ab_loc]))
-                        # print(insn_summary_map_typed[addr][ab_loc])
-                        # print(info.func_summary_map_typed[func_addr][ab_loc])
+                    # print(insn_summary_map_typed[addr][ab_loc])
+                    # print(info.func_summary_map_typed[func_addr][ab_loc])
 
                 # update info.insn_summary_map_typed
                 # print("*")
@@ -5090,8 +5165,8 @@ def generate_function_summary_typed():
                         info.insn_summary_map_typed[addr][ab_loc] = set()
                     info.insn_summary_map_typed[addr][ab_loc] = copy.deepcopy(
                         info.insn_summary_map_typed[addr][ab_loc].union(insn_summary_map_typed[addr][ab_loc]))
-                    # print(insn_summary_map_typed[addr][ab_loc])
-                    # print(info.insn_summary_map_typed[addr][ab_loc])
+                # print(insn_summary_map_typed[addr][ab_loc])
+                # print(info.insn_summary_map_typed[addr][ab_loc])
 
     # for addr in sorted(info.func_summary_map_typed):
     #	print("*")
@@ -5205,9 +5280,9 @@ def update_CFG():
                 for old_to_bb in old_to_bbs:
                     if old_to_bb.name == "UnresolvableJumpTarget":
                         info.cfg.graph.remove_edge(from_bb, old_to_bb)
-                        # print("*")
-                        # print(hex(from_bb.addr))
-                        # print(hex(old_to_bb.addr))
+                    # print("*")
+                    # print(hex(from_bb.addr))
+                    # print(hex(old_to_bb.addr))
                 # add edge
                 for func_addr in sorted(info.funcaddr_para_access_map):
                     if info.funcaddr_para_access_map[func_addr] == info.callsite_para_access_map[callsite_insn_addr]:
@@ -5221,9 +5296,9 @@ def update_CFG():
                         data = {}
                         data["jumpkind"] = "Ijk_Boring"
                         info.cfg.graph.add_edge(from_bb, to_bb, **data)
-                        # print("*")
-                        # print(hex(from_bb.addr))
-                        # print(hex(to_bb.addr))
+                    # print("*")
+                    # print(hex(from_bb.addr))
+                    # print(hex(to_bb.addr))
 
         # connect newly resolved call insn to its targets
         if callsite_insn_addr in info.call_insn_addresses:
@@ -5274,9 +5349,9 @@ def update_CFG():
                                 data = {}
                                 data["jumpkind"] = "Ijk_Ret"
                                 info.cfg.graph.add_edge(ret_bb, from_bb, **data)
-                                # print("*")
-                                # print(hex(ret_bb.addr))
-                                # print(hex(from_bb.addr))
+                            # print("*")
+                            # print(hex(ret_bb.addr))
+                            # print(hex(from_bb.addr))
 
     # on the updated CFG, generate our concise callgraph
     # print("generate callgraph")
@@ -5326,21 +5401,21 @@ def update_CFG():
             ##print(list(nx.find_cycle(info.concise_callgraph_acyclic, orientation='original')))
             # print(edge)
             info.concise_callgraph_acyclic.remove_edge(edge[0], edge[1])
-            # print(info.concise_callgraph_acyclic.has_edge(edge[0], edge[1]))
-            # pruned.append(edge[0], edge[1])
-            # list(nx.find_cycle(info.concise_callgraph, orientation='original'))[-1]
-            # print("*")
-            # print(list(nx.find_cycle(info.concise_callgraph, orientation='original')))
-            # print(list(nx.find_cycle(info.concise_callgraph, orientation='original'))[-1])
-            # print(hex(edge[0]))
-            # print(hex(edge[1]))
-            # index = index + 1
+        # print(info.concise_callgraph_acyclic.has_edge(edge[0], edge[1]))
+        # pruned.append(edge[0], edge[1])
+        # list(nx.find_cycle(info.concise_callgraph, orientation='original'))[-1]
+        # print("*")
+        # print(list(nx.find_cycle(info.concise_callgraph, orientation='original')))
+        # print(list(nx.find_cycle(info.concise_callgraph, orientation='original'))[-1])
+        # print(hex(edge[0]))
+        # print(hex(edge[1]))
+        # index = index + 1
 
-            # if time-out, also break
-            # while_true_end = time.time()
-            # while_true_time = while_true_end - while_true_start
-            # if while_true_time > 300:
-            #	break
+        # if time-out, also break
+        # while_true_end = time.time()
+        # while_true_time = while_true_end - while_true_start
+        # if while_true_time > 300:
+        #	break
 
     except:
         pass
@@ -5371,11 +5446,49 @@ def update_CFG():
     print("updated edges: " + str(len(info.cfg.graph.edges())))
 
 
+
+register_map = {
+    "rdi": "rdi",
+    "edi": "rdi",
+    "di": "rdi",
+    "dil": "rdi",
+    "rsi": "rsi",
+    "esi": "rsi",
+    "si": "rsi",
+    "sil": "rsi",
+    "rdx": "rdx",
+    "edx":"rdx",
+    "dx":"rdx",
+    "dl":"rdx",
+    "rcx": "rcx",
+    "ecx":"rcx",
+    "cx":"rcx",
+    "cl":"rcx",
+    "r8": "r8",
+    "r8d":"r8",
+    "r8w":"r8",
+    "r8b":"r8",
+    "r9": "r9",
+    "r9d":"r9",
+    "r9w":"r9",
+    "r9b":"r9",
+    "xmm0": "xmm0",
+    "xmm1": "xmm1",
+    "xmm2": "xmm2",
+    "xmm3": "xmm3",
+    "xmm4": "xmm4",
+    "xmm5": "xmm5",
+    "xmm6": "xmm6",
+    "xmm7": "xmm7",
+    # 添加更多的寄存器映射，如有需要
+}
+
+
 # generate call site signatures for call sites and unsolved jmp sites
 def generate_callsite_signature():
     info.callsite_para_access_map_tmp_file = info.binaryfile + "_callsite_para_access_map_tmp_file"
 
-    if os.path.exists(info.callsite_para_access_map_tmp_file):
+    if False and os.path.exists(info.callsite_para_access_map_tmp_file):
 
         info.callsite_para_access_map = {}
 
@@ -5483,7 +5596,13 @@ def generate_callsite_signature():
         info.call_site_bb_addrs.append(info.bbendaddr_bbstartaddr_map[addr])
 
     callsite_para_access_map = {}
+    callsite_reg_para_access_map = {}
+    callsite_reg_xmm_para_access_map = {}
+
     for call_insn_addr in info.call_insn_addresses:
+        if call_insn_addr == 5356:#5185
+            print(call_insn_addr)
+            pass
 
         if call_insn_addr not in info.bbendaddr_bbstartaddr_map:
             continue
@@ -5508,6 +5627,8 @@ def generate_callsite_signature():
         # insn not in map if esp is not written
         # call_esp -> 1, ..., for ten parameters
         esp_access_map = {}
+        reg_access_map = {}
+        reg_xmm_access_map = {}
 
         # list all accesses before call insn
         esp_accesses_before = set()
@@ -5526,21 +5647,21 @@ def generate_callsite_signature():
                     if insn.mnemonic.startswith("sub") \
                             and len(insn.operands) == 2 and insn.operands[1].type == X86_OP_IMM \
                             and insn.operands[0].type == X86_OP_REG \
-                            and "esp" == insn.reg_name(insn.operands[0].value.reg):
+                            and "rsp" == insn.reg_name(insn.operands[0].value.reg):
                         # print(insn.reg_name(insn.operands[0].value.reg))
                         esp_value_map[succ] = esp_value_map[addr] - insn.operands[1].value.imm
                     elif insn.mnemonic.startswith("add") \
                             and len(insn.operands) == 2 and insn.operands[1].type == X86_OP_IMM \
                             and insn.operands[0].type == X86_OP_REG \
-                            and "esp" == insn.reg_name(insn.operands[0].value.reg):
+                            and "rsp" == insn.reg_name(insn.operands[0].value.reg):
                         # print(insn.reg_name(insn.operands[0].value.reg))
                         esp_value_map[succ] = esp_value_map[addr] + insn.operands[1].value.imm
                     elif insn.mnemonic.startswith("push"):
                         # print(insn.op_str)
-                        esp_value_map[succ] = esp_value_map[addr] - 4
+                        esp_value_map[succ] = esp_value_map[addr] - 8
                     elif insn.mnemonic.startswith("pop"):
                         # print(insn.op_str)
-                        esp_value_map[succ] = esp_value_map[addr] + 4
+                        esp_value_map[succ] = esp_value_map[addr] + 8
                     else:
                         esp_value_map[succ] = esp_value_map[addr]
                 else:
@@ -5568,18 +5689,18 @@ def generate_callsite_signature():
                         # print(hex(insn.address))
                         # print(insn.mnemonic)
                         # print(insn.op_str)
-                        if (op.value.mem.base != 0 and "esp" == info.insnsmap[addr].reg_name(op.value.mem.base)) \
+                        if (op.value.mem.base != 0 and "rsp" == info.insnsmap[addr].reg_name(op.value.mem.base)) \
                                 and (op.value.mem.index == 0):
                             # print(op.value.mem.disp)
                             value = esp_value_map[addr] + op.value.mem.disp
                             # print("*")
                             # print(hex(addr))
                             # print(value)
-                            if value in [0x0, 0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20,
-                                         0x24]:  # [0x0, 0x4, 0x8, 0xc, 0x10, 0x14]:
-                                esp_access_map[addr] = int((value + 0x4) / 0x4)
+                            if value in [0x0, 0x8, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40,
+                                         0x48]:  # [0x0, 0x4, 0x8, 0xc, 0x10, 0x14]:
+                                esp_access_map[addr] = int((value + 0x8) / 0x8) + 6
 
-                        if (op.value.mem.index != 0 and "esp" == info.insnsmap[addr].reg_name(op.value.mem.index)) \
+                        if (op.value.mem.index != 0 and "rsp" == info.insnsmap[addr].reg_name(op.value.mem.index)) \
                                 and (op.value.mem.base == 0):
                             value = esp_value_map[addr] * op.value.mem.scale + op.value.mem.disp
                             # print(esp_value_map[addr])
@@ -5588,14 +5709,49 @@ def generate_callsite_signature():
                             # print("*")
                             # print(hex(addr))
                             # print(value)
-                            if value in [0x0, 0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20,
-                                         0x24]:  # [0x0, 0x4, 0x8, 0xc, 0x10, 0x14]:
-                                esp_access_map[addr] = int((value + 0x4) / 0x4)
+                            if value in [0x0, 0x8, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40,
+                                         0x48]:  # [0x0, 0x4, 0x8, 0xc, 0x10, 0x14]:
+                                esp_access_map[addr] = int((value + 0x8) / 0x8) + 6
+                    elif op.type == X86_OP_REG and info.insnsmap[addr].reg_name(op.value.reg) in register_map: # 64 modified
+                        if  register_map[info.insnsmap[addr].reg_name(op.value.reg)] in ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]:
+                            reg_access_map[addr] = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"].index(register_map[info.insnsmap[addr].reg_name(op.value.reg)])+1
+                        elif register_map[info.insnsmap[addr].reg_name(op.value.reg)] in ["xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"]:
+                            reg_xmm_access_map[addr] = ["xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"].index(register_map[info.insnsmap[addr].reg_name(op.value.reg)])+1
+                elif insn.mnemonic == "pop": #对pop的准则
+                    op = insn.operands[0]
+                    if op.type == X86_OP_REG and info.insnsmap[addr].reg_name(op.value.reg) in register_map:
+                        if register_map[info.insnsmap[addr].reg_name(op.value.reg)] in ["rdi", "rsi", "rdx", "rcx",
+                                                                                        "r8", "r9"]:
+                            reg_access_map[addr] = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"].index(
+                                register_map[info.insnsmap[addr].reg_name(op.value.reg)]) + 1
+                        elif register_map[info.insnsmap[addr].reg_name(op.value.reg)] in ["xmm0", "xmm1", "xmm2",
+                                                                                          "xmm3", "xmm4", "xmm5",
+                                                                                          "xmm6", "xmm7"]:
+                            reg_xmm_access_map[addr] = ["xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6",
+                                                        "xmm7"].index(
+                                register_map[info.insnsmap[addr].reg_name(op.value.reg)]) + 1
+
         mmax = -1
+        reg_access_mmax=-1
+        reg_xmm_access_mmax=-1
         for addr in sorted(esp_access_map):
             if esp_access_map[addr] > mmax:
                 mmax = esp_access_map[addr]
             esp_accesses_before.add(esp_access_map[addr])
+        for addr in sorted(reg_access_map):
+            if reg_access_map[addr] > reg_access_mmax:
+                reg_access_mmax = reg_access_map[addr]
+        for addr in sorted(reg_xmm_access_map):
+            if reg_xmm_access_map[addr] > reg_xmm_access_mmax:
+                reg_xmm_access_mmax = reg_xmm_access_map[addr]
+        if reg_access_mmax!=-1 :
+            last=0
+            for item in sorted(reg_access_map.items(),key=lambda item: item[1]):
+                if item[1]-last==1:
+                    reg_access_mmax = item[1]
+                    last=reg_access_mmax
+                else:
+                    break
 
         if mmax != -1:
             callsite_para_access_map[bb1endaddr] = mmax
@@ -5633,21 +5789,21 @@ def generate_callsite_signature():
                             if insn.mnemonic.startswith("sub") \
                                     and len(insn.operands) == 2 and insn.operands[1].type == X86_OP_IMM \
                                     and insn.operands[0].type == X86_OP_REG \
-                                    and "esp" == insn.reg_name(insn.operands[0].value.reg):
+                                    and "rsp" == insn.reg_name(insn.operands[0].value.reg):
                                 # print(insn.reg_name(insn.operands[0].value.reg))
                                 esp_value_map[succ] = esp_value_map[addr] - insn.operands[1].value.imm
                             elif insn.mnemonic.startswith("add") \
                                     and len(insn.operands) == 2 and insn.operands[1].type == X86_OP_IMM \
                                     and insn.operands[0].type == X86_OP_REG \
-                                    and "esp" == insn.reg_name(insn.operands[0].value.reg):
+                                    and "rsp" == insn.reg_name(insn.operands[0].value.reg):
                                 # print(insn.reg_name(insn.operands[0].value.reg))
                                 esp_value_map[succ] = esp_value_map[addr] + insn.operands[1].value.imm
                             elif insn.mnemonic.startswith("push"):
                                 # print(insn.op_str)
-                                esp_value_map[succ] = esp_value_map[addr] - 4
+                                esp_value_map[succ] = esp_value_map[addr] - 8
                             elif insn.mnemonic.startswith("pop"):
                                 # print(insn.op_str)
-                                esp_value_map[succ] = esp_value_map[addr] + 4
+                                esp_value_map[succ] = esp_value_map[addr] + 8
                             else:
                                 esp_value_map[succ] = esp_value_map[addr]
                         else:
@@ -5674,7 +5830,7 @@ def generate_callsite_signature():
                                 # print(insn.op_str)
 
                                 if insn.mnemonic.startswith("lea") == False:
-                                    if (op.value.mem.base != 0 and "esp" == info.insnsmap[addr].reg_name(
+                                    if (op.value.mem.base != 0 and "rsp" == info.insnsmap[addr].reg_name(
                                             op.value.mem.base)) \
                                             and (op.value.mem.index == 0):
                                         # print(op.value.mem.disp)
@@ -5682,11 +5838,11 @@ def generate_callsite_signature():
                                         # print("*")
                                         # print(hex(addr))
                                         # print(value)
-                                        if value in [0x0, 0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20,
-                                                     0x24]:  # [0x0, 0x4, 0x8, 0xc, 0x10, 0x14]:
-                                            esp_access_map[addr] = int((value + 0x4) / 0x4)
+                                        if value in [0x0, 0x8, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40,
+                                                    0x48]:  # [0x0, 0x4, 0x8, 0xc, 0x10, 0x14]:
+                                            esp_access_map[addr] = int((value + 0x8) / 0x8)
 
-                                    if (op.value.mem.index != 0 and "esp" == info.insnsmap[addr].reg_name(
+                                    if (op.value.mem.index != 0 and "rsp" == info.insnsmap[addr].reg_name(
                                             op.value.mem.index)) \
                                             and (op.value.mem.base == 0):
                                         value = esp_value_map[addr] * op.value.mem.scale + op.value.mem.disp
@@ -5696,9 +5852,12 @@ def generate_callsite_signature():
                                         # print("*")
                                         # print(hex(addr))
                                         # print(value)
-                                        if value in [0x0, 0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20,
-                                                     0x24]:  # [0x0, 0x4, 0x8, 0xc, 0x10, 0x14]:
-                                            esp_access_map[addr] = int((value + 0x4) / 0x4)
+                                        if value in [0x0, 0x8, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40,
+                                                    0x48]:  # [0x0, 0x4, 0x8, 0xc, 0x10, 0x14]:
+                                            esp_access_map[addr] = int((value + 0x8) / 0x8)
+                            # elif op.type == X86_OP_REG:  # 64 modified
+                            #     if info.insnsmap[addr].reg_name(op.value.mem.base) in ["rdi", "rsi", "rdx", "rcx", "r8","r9"]:
+                            #         esp_access_map[addr] = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"].index(info.insnsmap[addr].reg_name(op.value.mem.base)) + 1
 
                 for addr in sorted(esp_access_map):
                     if esp_access_map[addr] < mmin:
@@ -5717,14 +5876,24 @@ def generate_callsite_signature():
                         callsite_para_access_map[bb1endaddr] = 0
                     else:
                         callsite_para_access_map[bb1endaddr] = mmax
+        if reg_xmm_access_mmax != -1:
+            callsite_reg_xmm_para_access_map[bb1endaddr] = reg_xmm_access_mmax
+        else:
+            callsite_reg_xmm_para_access_map[bb1endaddr] = 0
+        if reg_access_mmax != -1:
+            callsite_reg_para_access_map[bb1endaddr] = reg_access_mmax
+        else:
+            callsite_reg_para_access_map[bb1endaddr] = 0
 
         info.callsite_para_access_map[bb1endaddr] = callsite_para_access_map[bb1endaddr]
+        info.callsite_reg_para_access_map[bb1endaddr] = callsite_reg_para_access_map[bb1endaddr]
+        info.callsite_reg_xmm_para_access_map[bb1endaddr] = callsite_reg_xmm_para_access_map[bb1endaddr]
 
-        # print("*")
-        # print("hex(bb1endaddr): " + hex(bb1endaddr))
-        # print("mmin: " + str(mmin))
-        # print("callsite_para_access_map[bb1endaddr]: " + str(callsite_para_access_map[bb1endaddr]))
-        # print(info.project.factory.block(bb2addr).pp())
+    # print("*")
+    # print("hex(bb1endaddr): " + hex(bb1endaddr))
+    # print("mmin: " + str(mmin))
+    # print("callsite_para_access_map[bb1endaddr]: " + str(callsite_para_access_map[bb1endaddr]))
+    # print(info.project.factory.block(bb2addr).pp())
 
     # jmp sites
 
@@ -5753,15 +5922,15 @@ def generate_callsite_signature():
                         if not func_name.endswith("@plt"):
                             if func_addr in info.funcaddr_para_access_map:
                                 info.callsite_para_access_map[jmp_insn_addr] = info.funcaddr_para_access_map[func_addr]
-                                # print("*")
-                                # print(hex(jmp_insn_addr))
-                                # print(str(info.callsite_para_access_map[jmp_insn_addr]))
+                            # print("*")
+                            # print(hex(jmp_insn_addr))
+                            # print(str(info.callsite_para_access_map[jmp_insn_addr]))
 
-                # if len(bbnode.successors) == 0:
-                #	print("*")
-                #	print(hex(jmp_insn_addr))
-                #	print(info.insnstringsmap[jmp_insn_addr])
-                #	print(info.insnsmap[jmp_insn_addr].op_str)
+            # if len(bbnode.successors) == 0:
+            #	print("*")
+            #	print(hex(jmp_insn_addr))
+            #	print(info.insnstringsmap[jmp_insn_addr])
+            #	print(info.insnsmap[jmp_insn_addr].op_str)
 
     # for addr in sorted(info.callsite_para_access_map):
     #	print("*")
@@ -5974,13 +6143,7 @@ def generate_func_prototype():
 
         return
 
-    print("Enter here", len(info.func_addr_map))
-    print("info.cfg.kb.functions", info.cfg.kb.functions)
-    for func_addr, func_obj in info.cfg.kb.functions.items():
-        print("Function Address:", hex(func_addr), "Function Name:", func_obj.name)
-
     for func_addr in sorted(info.func_addr_map):
-        # print(1)
         func_name = info.func_addr_map[func_addr][0]
         func_end_addr = info.func_addr_map[func_addr][1]
         # print("generate_func_prototype")
@@ -5990,13 +6153,10 @@ def generate_func_prototype():
         # print(hex(func_end_addr))
 
         if func_addr not in info.insnsmap:
-            # print(2,func_addr,func_name)
             continue
         if func_addr not in info.cfg.kb.functions:
-            # print(3,func_addr,func_name)
             continue
         if func_addr not in info.func_addr_map:
-            # print(4,func_addr,func_name)
             continue
         # if func_addr != 0x8059400:
         #	continue
@@ -6079,30 +6239,30 @@ def generate_func_prototype():
                             if insn.mnemonic.startswith("sub") \
                                     and len(insn.operands) == 2 and insn.operands[1].type == X86_OP_IMM \
                                     and insn.operands[0].type == X86_OP_REG \
-                                    and "esp" == insn.reg_name(insn.operands[0].value.reg):
+                                    and "rsp" == insn.reg_name(insn.operands[0].value.reg):
                                 # print(insn.reg_name(insn.operands[0].value.reg))
                                 insn_stack_offset_map[succ] = insn_stack_offset_map[addr] - insn.operands[1].value.imm
                             elif insn.mnemonic.startswith("add") \
                                     and len(insn.operands) == 2 and insn.operands[1].type == X86_OP_IMM \
                                     and insn.operands[0].type == X86_OP_REG \
-                                    and "esp" == insn.reg_name(insn.operands[0].value.reg):
+                                    and "rsp" == insn.reg_name(insn.operands[0].value.reg):
                                 # print(insn.reg_name(insn.operands[0].value.reg))
                                 insn_stack_offset_map[succ] = insn_stack_offset_map[addr] + insn.operands[1].value.imm
                             elif insn.mnemonic.startswith("push"):
                                 # print(insn.op_str)
-                                insn_stack_offset_map[succ] = insn_stack_offset_map[addr] - 4
+                                insn_stack_offset_map[succ] = insn_stack_offset_map[addr] - 8
                             elif insn.mnemonic.startswith("pop"):
                                 # print(insn.op_str)
-                                insn_stack_offset_map[succ] = insn_stack_offset_map[addr] + 4
+                                insn_stack_offset_map[succ] = insn_stack_offset_map[addr] + 8
                             else:
                                 insn_stack_offset_map[succ] = insn_stack_offset_map[addr]
                         else:
                             insn_stack_offset_map[succ] = insn_stack_offset_map[addr]
-                        # print("++")
-                        # print(info.insnsmap[addr].mnemonic)
-                        # print(insn_stack_offset_map[addr])
-                        # print(insn_stack_offset_map[succ])
-                        # print("++")
+                    # print("++")
+                    # print(info.insnsmap[addr].mnemonic)
+                    # print(insn_stack_offset_map[addr])
+                    # print(insn_stack_offset_map[succ])
+                    # print("++")
 
                 addr = findnextinsaddr(addr)
 
@@ -6195,9 +6355,9 @@ def generate_func_prototype():
                     # remove edge if the target is fake
                     if len(to_bbs) == 0 or (len(to_bbs) == 1 and to_bbs[0].name == "UnresolvableJumpTarget"):
                         default_insn_stack_offset = insn_stack_offset_map[addr]
-                        # print("*")
-                        # print(hex(addr))
-                        # print(hex(default_insn_stack_offset))
+                    # print("*")
+                    # print(hex(addr))
+                    # print(hex(default_insn_stack_offset))
                 addr = findnextinsaddr(addr)
 
             # set stack offsets for dead code
@@ -6219,16 +6379,16 @@ def generate_func_prototype():
                         if insn_stack_offset_map[addr] == None:
                             insn_stack_offset_map[addr] = 0
 
-                    # print("*")
-                    # print(hex(addr))
-                    # print(hex(insn_stack_offset_map[addr]))
+                # print("*")
+                # print(hex(addr))
+                # print(hex(insn_stack_offset_map[addr]))
                 addr = findnextinsaddr(addr)
 
         for addr in sorted(insn_stack_offset_map):
             if addr in info.insnsmap:
                 for op in info.insnsmap[addr].operands:
                     if op.type == X86_OP_MEM:
-                        if (op.value.mem.base != 0 and "esp" == info.insnsmap[addr].reg_name(op.value.mem.base)) \
+                        if (op.value.mem.base != 0 and "rsp" == info.insnsmap[addr].reg_name(op.value.mem.base)) \
                                 and (op.value.mem.index == 0):
                             # print(insn_stack_offset_map[addr])
                             # print(op.value.mem.disp)
@@ -6237,10 +6397,10 @@ def generate_func_prototype():
                                 # print("*")
                                 # print(hex(addr))
                                 # print(value)
-                                if value in [0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24, 0x28]:
-                                    insn_para_access_map[addr] = int(value / 0x4)
+                                if value in [0x8, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48, 0x50]:
+                                    insn_para_access_map[addr] = int(value / 0x8)
 
-                        if (op.value.mem.index != 0 and "esp" == info.insnsmap[addr].reg_name(op.value.mem.index)) \
+                        if (op.value.mem.index != 0 and "rsp" == info.insnsmap[addr].reg_name(op.value.mem.index)) \
                                 and (op.value.mem.base == 0):
                             if insn_stack_offset_map[addr] != None:
                                 value = insn_stack_offset_map[addr] * op.value.mem.scale + op.value.mem.disp
@@ -6250,8 +6410,8 @@ def generate_func_prototype():
                                 # print("*")
                                 # print(hex(addr))
                                 # print(value)
-                                if value in [0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24, 0x28]:
-                                    insn_para_access_map[addr] = int(value / 0x4)
+                                if value in [0x8, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48, 0x50]:
+                                    insn_para_access_map[addr] = int(value / 0x8)
         esp_accesses = set()
         mmax = -1
         for addr in sorted(insn_para_access_map):
@@ -6280,10 +6440,10 @@ def generate_func_prototype():
         for addr in sorted(insn_stack_offset_map):
             info.insn_stack_offset_map[addr] = insn_stack_offset_map[addr]
 
-    for addr in sorted(info.funcaddr_para_access_map):
-        print("*")
-        print(hex(addr))
-        print(info.funcaddr_para_access_map[addr])
+    # for addr in sorted(info.funcaddr_para_access_map):
+    #	print("*")
+    #	print(hex(addr))
+    #	print(info.funcaddr_para_access_map[addr])
     # for addr in sorted(info.deadcode):
     #	print("*")
     #	print(hex(addr))
@@ -6325,7 +6485,6 @@ def generate_func_prototype():
 
 
 def find_deadcode():
-    return
     '''
     info.deadcode_tmp_file = info.binaryfile + "_deadcode_tmp_file"
     
@@ -6496,7 +6655,7 @@ def find_deadcode():
             f.write("0\n")
     f.close()	
     '''
-
+    return
 
 def find_functions():
     templist = []
@@ -6640,14 +6799,14 @@ def findpreviousinsaddr(addr):
 # convert variable dynamic address used by angr (for symbolic execution use)
 # to static variable address (address defined in the binary) by just minus
 # 0x400000 (for shared object)
-def v_dyn_addr_to_static_addr(v_addr):
+def v_dyn_addr_to_static_addr(v_addr): #TODO
     if info.picflag == 1:
         return v_addr - 0x400000
     else:
         return v_addr
 
 
-def static_addr_to_v_dyn_addr(s_addr):
+def static_addr_to_v_dyn_addr(s_addr): #TODO
     if info.picflag == 1:
         return s_addr + 0x400000
     else:
@@ -6659,6 +6818,7 @@ def static_addr_to_v_dyn_addr(s_addr):
 # binary, return -1
 def v_dyn_addr_to_binary_offset(v_addr):
     # convert v_addr to v_static_addr
+    print(info.picflag)
     v_static_addr = v_dyn_addr_to_static_addr(v_addr)
     print(v_static_addr, v_addr)
 
@@ -6696,14 +6856,13 @@ def capstone_parse():
             info.code = f.read()
             insns = info.project.arch.capstone.disasm(info.code, addr)
             insnlist = list(insns)
-            # print(insnlist)
 
             # disassemble as many instructions as objdump
             templist = list(insnlist)
             for csinsn in templist:
                 if csinsn.address > info.insnaddrs[-1]:
                     insnlist.remove(csinsn)
-            print("insnlist[0]", insnlist[0])
+
             info.insns.extend(insnlist)
             for ins in insnlist:
                 info.insnsmap[ins.address] = ins
@@ -6714,7 +6873,7 @@ def capstone_parse():
             start = insnlist[-1].address
         else:
             start = addr
-        # print("start: " + hex(start))
+    # print("start: " + hex(start))
 
     all_insn_addrs = set(info.insnaddrs)
     all_capstone_insn_addrs = set()
@@ -6854,7 +7013,7 @@ def find_ins_addr():
 
             if "<" in line1 and ">:" in line1:
                 func_addr = int(line1[:line1.index("<")], 16)
-                # print(hex(func_addr))
+            # print(hex(func_addr))
 
             if ":" in l1 and len(l1) >= 2:
                 # print(l1)
@@ -6873,7 +7032,7 @@ def find_ins_addr():
                 # print(s)
                 if len(s) >= 3:
                     info.insnstringsmap[addr] = s[-1]
-                    # print(s[-1])
+                # print(s[-1])
                 else:
                     info.insnstringsmap[addr] = ""
                     # print(s)
@@ -6907,7 +7066,7 @@ def find_ins_addr():
                     target_addr = -1
                     try:
                         target_addr = int(s1, 16)
-                        # print(hex(target_addr))
+                    # print(hex(target_addr))
                     except:
                         # print(s1)
                         continue
@@ -6935,7 +7094,7 @@ def find_ins_addr():
                     target_addr = -1
                     try:
                         target_addr = int(s1, 16)
-                        # print(hex(target_addr))
+                    # print(hex(target_addr))
                     except:
                         # print(s1)
                         continue
@@ -7001,12 +7160,11 @@ def readelf_sections_info():
     for line1 in lines1:
         i += 1
         line_current += line1
-        if i % 2 == 0:
+        if i%2==0:
             continue
         else:
-            line1 = line_current
-            line_current = ""
-        # print("=======")
+            line1=line_current
+            line_current=""
         if "[" in line1 and "]" in line1:
 
             # print(line1[line1.index("[") + 1:line1.index("]")])
@@ -7017,10 +7175,10 @@ def readelf_sections_info():
                 # print(str(int(s, 10)))
                 # print(line1)
                 restline1 = line1[line1.index("]") + 1:].strip().split()
-                # print("restline1",restline1)
+                # print("restline1", restline1)
 
                 if int(s, 10) != 0:
-                    # print("line1",line1)
+                    # print("line1", line1)
                     # print(restline1[0])
                     # print(restline1[3])
                     # print(nextline1split[0])
@@ -7053,8 +7211,9 @@ def readelf_sections_info():
             if end > info.mmax_data_section_addr:
                 info.mmax_data_section_addr = end
 
-    # print(hex(info.mmin_data_section_addr))
-    # print(hex(info.mmax_data_section_addr))
+
+# print(hex(info.mmin_data_section_addr))
+# print(hex(info.mmax_data_section_addr))
 
 
 #
@@ -7134,9 +7293,9 @@ def reset_update_CFG_typed():
                 callsite_para_count = info.callsite_para_access_map[addr]
                 for i in range(callsite_para_count):
                     info.callsite_para_details_map[addr].append(0)
-                # print("*")
-                # print(hex(addr))
-                # print(info.callsite_para_details_map[addr])
+            # print("*")
+            # print(hex(addr))
+            # print(info.callsite_para_details_map[addr])
             addr = findnextinsaddr(addr)
 
     # print("first pass")
@@ -7166,20 +7325,20 @@ def reset_update_CFG_typed():
             # print(hex(addr))
 
             if addr in info.insnstringsmap and addr in info.insnsmap and "(" in info.insnstringsmap[addr] and not \
-                    info.insnstringsmap[addr].startswith("lea"):
+            info.insnstringsmap[addr].startswith("lea"):
                 insn = info.insnsmap[addr]
                 for op in insn.operands:
                     if op.type == X86_OP_MEM:
                         if (
                                 op.value.mem.disp < info.mmin_data_section_addr or op.value.mem.disp > info.mmax_data_section_addr) \
-                                and op.value.mem.base != 0 and insn.reg_name(op.value.mem.base) != "esp" \
+                                and op.value.mem.base != 0 and insn.reg_name(op.value.mem.base) != "rsp" \
                                 and insn.reg_name(op.value.mem.base) in info.gpr:
                             base_reg_name = insn.reg_name(op.value.mem.base)
                             if addr in info.insn_summary_map and base_reg_name in info.insn_summary_map[addr]:
                                 for value in info.insn_summary_map[addr][base_reg_name]:
-                                    if value in [0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24,
-                                                 0x28] and value <= 4 * func_para_count:
-                                        para_index = int(value / 4 - 1)
+                                    if value in [0x8, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48,
+                                                 0x50] and value <= 8 * func_para_count:
+                                        para_index = int(value / 8 - 1)
                                         # print("*")
                                         # print(value)
                                         # print(func_para_count)
@@ -7188,9 +7347,9 @@ def reset_update_CFG_typed():
                                         # print(info.funcaddr_para_details_map[func_addr])
                                         # print(info.funcaddr_para_details_map[func_addr][para_index])
                                         info.funcaddr_para_details_map[func_addr][para_index] = 1
-                                        # print("*1")
-                                        # print(hex(addr))
-                                        # print(info.funcaddr_para_details_map[func_addr])
+                                    # print("*1")
+                                    # print(hex(addr))
+                                    # print(info.funcaddr_para_details_map[func_addr])
 
                                     # generate typed callsite signature
                                     elif isinstance(value, str) and value.startswith("CALLSITE_P"):
@@ -7201,37 +7360,37 @@ def reset_update_CFG_typed():
                                         # print(para_index)
                                         # print(info.callsite_para_details_map[callsite_addr])
                                         info.callsite_para_details_map[callsite_addr][para_index] = 1
-                                        # print("*1")
-                                        # print(hex(addr))
-                                        # print(value)
-                                        # print(hex(callsite_addr))
-                                        # print(info.callsite_para_details_map[callsite_addr])
+                                    # print("*1")
+                                    # print(hex(addr))
+                                    # print(value)
+                                    # print(hex(callsite_addr))
+                                    # print(info.callsite_para_details_map[callsite_addr])
                         elif (
                                 op.value.mem.disp < info.mmin_data_section_addr or op.value.mem.disp > info.mmax_data_section_addr) \
                                 and op.value.mem.base == 0 and op.value.mem.index != 0 and insn.reg_name(
-                            op.value.mem.index) != "esp" \
+                            op.value.mem.index) != "rsp" \
                                 and insn.reg_name(op.value.mem.index) in info.gpr:
                             index_reg_name = insn.reg_name(op.value.mem.index)
                             if addr in info.insn_summary_map and index_reg_name in info.insn_summary_map[addr]:
                                 for value in info.insn_summary_map[addr][index_reg_name]:
-                                    if value in [0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24,
-                                                 0x28] and value <= 4 * func_para_count:
-                                        para_index = int(value / 4 - 1)
+                                    if value in [0x8, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48,
+                                                 0x50] and value <= 4 * func_para_count:
+                                        para_index = int(value / 8 - 1)
                                         info.funcaddr_para_details_map[func_addr][para_index] = 1
-                                        # print("*2")
-                                        # print(hex(addr))
-                                        # print(info.funcaddr_para_details_map[func_addr])
+                                    # print("*2")
+                                    # print(hex(addr))
+                                    # print(info.funcaddr_para_details_map[func_addr])
 
                                     # generate typed callsite signature
                                     elif isinstance(value, str) and value.startswith("CALLSITE_P"):
                                         callsite_addr = int(value[value.index("0x"):], 16)
                                         para_index = int(value[10:value.index("_0x")], 10) - 1
                                         info.callsite_para_details_map[callsite_addr][para_index] = 1
-                                        # print("*2")
-                                        # print(hex(addr))
-                                        # print(value)
-                                        # print(hex(callsite_addr))
-                                        # print(info.callsite_para_details_map[callsite_addr])
+                                    # print("*2")
+                                    # print(hex(addr))
+                                    # print(value)
+                                    # print(hex(callsite_addr))
+                                    # print(info.callsite_para_details_map[callsite_addr])
 
             # generate typed callsite signature
             if addr in info.call_insn_addresses and addr in info.insn_stack_offset_map and addr in info.callsite_para_access_map and addr in info.callsite_para_details_map \
@@ -7264,7 +7423,7 @@ def reset_update_CFG_typed():
                     #			#print(i)
                     #			#print(info.callsite_para_details_map[addr])
                     #			break
-                    para_strs.append(hex(i * 4) + "(%esp)")
+                    para_strs.append(hex(i * 4) + "(%rsp)")
                 bbstartaddr = info.bbendaddr_bbstartaddr_map[addr]
                 addr1 = bbstartaddr
                 while addr1 < addr and addr1 != -1:
@@ -7276,24 +7435,24 @@ def reset_update_CFG_typed():
                                 if (src_value >= info.first_insn_addr and src_value <= info.last_insn_addr) \
                                         or (
                                         src_value >= info.mmin_data_section_addr and src_value <= info.mmax_data_section_addr):
-                                    para_index = int(int(para_str[:para_str.index("(")], 16) / 4)
+                                    para_index = int(int(para_str[:para_str.index("(")], 16) / 8)
                                     info.callsite_para_details_map[addr][para_index] = 1
-                                    # print("*")
-                                    # print(hex(addr))
-                                    # print(hex(addr1))
-                                    # print(para_index)
-                                    # print(info.callsite_para_details_map[addr])
-                            elif ",(%esp)" in insnstring1 and "mov" in insnstring1 and "$0x" in insnstring1 and "," in insnstring1:
+                                # print("*")
+                                # print(hex(addr))
+                                # print(hex(addr1))
+                                # print(para_index)
+                                # print(info.callsite_para_details_map[addr])
+                            elif ",(%rsp)" in insnstring1 and "mov" in insnstring1 and "$0x" in insnstring1 and "," in insnstring1:
                                 src_value = int(insnstring1[insnstring1.index("$0x") + 3: insnstring1.index(",")], 16)
                                 if (src_value >= info.first_insn_addr and src_value <= info.last_insn_addr) \
                                         or (
                                         src_value >= info.mmin_data_section_addr and src_value <= info.mmax_data_section_addr):
                                     info.callsite_para_details_map[addr][0] = 1
-                                    # print("*")
-                                    # print(hex(addr))
-                                    # print(hex(addr1))
-                                    # print(0)
-                                    # print(info.callsite_para_details_map[addr])
+                                # print("*")
+                                # print(hex(addr))
+                                # print(hex(addr1))
+                                # print(0)
+                                # print(info.callsite_para_details_map[addr])
 
                     addr1 = findnextinsaddr(addr1)
 
@@ -7325,14 +7484,14 @@ def reset_update_CFG_typed():
 
                         # old = info.funcaddr_para_details_map[callsite_target][para_index]
                         info.funcaddr_para_details_map[callsite_target][para_index] |= \
-                            info.callsite_para_details_map[callsite][para_index]
-                        # if info.funcaddr_para_details_map[callsite_target][para_index] != old:
-                        #	print("*")
-                        #	print(hex(callsite))
-                        #	print(hex(callsite_target))
-                        #	print(old)
-                        #	print(info.funcaddr_para_details_map[callsite_target][para_index])
-                        #	print(info.funcaddr_para_details_map[callsite_target])
+                        info.callsite_para_details_map[callsite][para_index]
+                    # if info.funcaddr_para_details_map[callsite_target][para_index] != old:
+                    #	print("*")
+                    #	print(hex(callsite))
+                    #	print(hex(callsite_target))
+                    #	print(old)
+                    #	print(info.funcaddr_para_details_map[callsite_target][para_index])
+                    #	print(info.funcaddr_para_details_map[callsite_target])
 
     # print("third pass")
     # third pass, update jmp targets using func prototype
@@ -7405,9 +7564,9 @@ def reset_update_CFG_typed():
                 for old_to_bb in old_to_bbs:
                     if old_to_bb.name == "UnresolvableJumpTarget":
                         info.cfg.graph.remove_edge(from_bb, old_to_bb)
-                        # print("*")
-                        # print(hex(from_bb.addr))
-                        # print(hex(old_to_bb.addr))
+                    # print("*")
+                    # print(hex(from_bb.addr))
+                    # print(hex(old_to_bb.addr))
                 # add edge
                 for func_addr in sorted(info.funcaddr_para_access_map):
                     if info.funcaddr_para_details_map[func_addr] == info.callsite_para_details_map[callsite_insn_addr]:
@@ -7421,9 +7580,9 @@ def reset_update_CFG_typed():
                         data = {}
                         data["jumpkind"] = "Ijk_Boring"
                         info.cfg.graph.add_edge(from_bb, to_bb, **data)
-                        # print("*")
-                        # print(hex(from_bb.addr))
-                        # print(hex(to_bb.addr))
+                    # print("*")
+                    # print(hex(from_bb.addr))
+                    # print(hex(to_bb.addr))
 
         # connect newly resolved call insn to its targets
         if callsite_insn_addr in info.call_insn_addresses:
@@ -7480,9 +7639,9 @@ def reset_update_CFG_typed():
                                 data = {}
                                 data["jumpkind"] = "Ijk_Ret"
                                 info.cfg.graph.add_edge(ret_bb, from_bb, **data)
-                                # print("*")
-                                # print(hex(ret_bb.addr))
-                                # print(hex(from_bb.addr))
+                            # print("*")
+                            # print(hex(ret_bb.addr))
+                            # print(hex(from_bb.addr))
 
     info.concise_callgraph = nx.DiGraph()
     info.concise_callgraph_acyclic = nx.DiGraph()
@@ -7536,21 +7695,21 @@ def reset_update_CFG_typed():
             ##print(list(nx.find_cycle(info.concise_callgraph_acyclic, orientation='original')))
             # print(edge)
             info.concise_callgraph_acyclic.remove_edge(edge[0], edge[1])
-            # print(info.concise_callgraph_acyclic.has_edge(edge[0], edge[1]))
-            # pruned.append(edge[0], edge[1])
-            # list(nx.find_cycle(info.concise_callgraph, orientation='original'))[-1]
-            # print("*")
-            # print(list(nx.find_cycle(info.concise_callgraph, orientation='original')))
-            # print(list(nx.find_cycle(info.concise_callgraph, orientation='original'))[-1])
-            # print(hex(edge[0]))
-            # print(hex(edge[1]))
-            # index = index + 1
+        # print(info.concise_callgraph_acyclic.has_edge(edge[0], edge[1]))
+        # pruned.append(edge[0], edge[1])
+        # list(nx.find_cycle(info.concise_callgraph, orientation='original'))[-1]
+        # print("*")
+        # print(list(nx.find_cycle(info.concise_callgraph, orientation='original')))
+        # print(list(nx.find_cycle(info.concise_callgraph, orientation='original'))[-1])
+        # print(hex(edge[0]))
+        # print(hex(edge[1]))
+        # index = index + 1
 
-            # if time-out, also break
-            # while_true_end = time.time()
-            # while_true_time = while_true_end - while_true_start
-            # if while_true_time > 300:
-            #	break
+        # if time-out, also break
+        # while_true_end = time.time()
+        # while_true_time = while_true_end - while_true_start
+        # if while_true_time > 300:
+        #	break
 
     except:
         pass
@@ -7568,17 +7727,19 @@ def reset_update_CFG_typed():
     # print(len(list(reversed(list(nx.topological_sort(info.concise_callgraph_acyclic))))))
     info.ordered_func_addresses = list(reversed(list(nx.topological_sort(info.concise_callgraph_acyclic))))
 
-    # print("*")
-    # for ordered_func_addr in info.ordered_func_addresses:
-    #	print(hex(ordered_func_addr))
 
-    # for callsite in sorted(info.callsite_map):
-    #	print("*")
-    #	print(hex(callsite))
-    #	for callee in sorted(info.callsite_map[callsite]):
-    #		print(hex(callee))
+# print("*")
+# for ordered_func_addr in info.ordered_func_addresses:
+#	print(hex(ordered_func_addr))
 
-    # print("update_CFG finishes")
+
+# for callsite in sorted(info.callsite_map):
+#	print("*")
+#	print(hex(callsite))
+#	for callee in sorted(info.callsite_map[callsite]):
+#		print(hex(callee))
+
+# print("update_CFG finishes")
 
 
 def reset_CFG():
@@ -7641,8 +7802,8 @@ def build_CFG():
                     #	print(hex(control_flow_transfer_insn))
                     # print("+")
                     control_flow_transfer_insns.extend(info.func_call_insn_addresses_map[f])
-                    # for control_flow_transfer_insn in control_flow_transfer_insns:
-                    #	print(hex(control_flow_transfer_insn))
+                # for control_flow_transfer_insn in control_flow_transfer_insns:
+                #	print(hex(control_flow_transfer_insn))
 
                 # for func_call_insn_addr in info.func_call_insn_addresses_map[f]:
                 #	print(hex(func_call_insn_addr))
@@ -7660,7 +7821,7 @@ def build_CFG():
                     if explicit_non_fall_through_control_flow_target >= func_addr and explicit_non_fall_through_control_flow_target <= func_end_addr:
                         explicit_local_non_fall_through_control_flow_targets.append(
                             explicit_non_fall_through_control_flow_target)
-                        # print(hex(explicit_non_fall_through_control_flow_target))
+                    # print(hex(explicit_non_fall_through_control_flow_target))
 
                 bb_start_addresses_set = set()
                 bb_start_addresses_set.add(func_addr)
@@ -7716,29 +7877,26 @@ def build_CFG():
 
 
 def load_binary():
-    print("1")
     file_command_return_string = subprocess.check_output(['file', info.args.input]).decode('utf-8')
     print("2", file_command_return_string)
+
     # if info.args.input.endswith(".so"):
     if "shared object" in file_command_return_string and "dynamically linked" in file_command_return_string:
-        info.picflag = 0
-        print("3")
+        info.picflag = 1
     else:
-        print("4")
         info.picflag = 0
 
     try:
-        print("5")
-        info.project = angr.Project(info.args.input,
-                                    load_options={'main_opts': {'base_addr': 0x0}, 'auto_load_libs': False})
+        info.picflag = 0
+        info.project = angr.Project(info.args.input, load_options={'main_opts': {'base_addr': 0x0},'auto_load_libs': False})
     except:
-        print("6")
         info.picflag = 0
         info.project = angr.Project(info.args.input,
                                     main_opts={'backend': 'blob'},
                                     load_options={'auto_load_libs': False})
 
-    # print(hex(info.picflag))
+
+# print(hex(info.picflag))
 
 
 def parse_parameters():
@@ -7759,57 +7917,42 @@ def main():
     # check parameters
     print("STEP 01.parse_parameters()", flush=True)
     parse_parameters()
-    # input()
     print("STEP 02.load_binary()", flush=True)
     load_binary()
-    # input()
     print("STEP 03.disassemble()", flush=True)
     disassemble()
-    # input()
     print("STEP 04.readelf_sections_info()", flush=True)
     readelf_sections_info()
-    # input()
     print("STEP 05.find_ins_addr()", flush=True)
     find_ins_addr()
-    # input()
     print("STEP 06.capstone_parse()", flush=True)
     capstone_parse()
-    # input()
     print("STEP 07.find_functions()", flush=True)
     find_functions()
-    # input()
     print("STEP 08.build_CFG()", flush=True)
     build_CFG()
-    # input()
     # find_deadcode()
     print("STEP 09.generate_func_prototype()", flush=True)
     generate_func_prototype()
-    # input()
     print("STEP 10.generate_callsite_signature()", flush=True)
     generate_callsite_signature()
-    # input()
     print("STEP 11.update_CFG()", flush=True)
     update_CFG()
-    # input()
     print("STEP 12.generate_function_summary()", flush=True)
     generate_function_summary()
-    # input()
     print("STEP 13.binary_static_taint()", flush=True)
-    binary_static_taint()
+    # binary_static_taint()
 
     #
     # selectivetaint-typed
     #
-    reset_CFG()
-    # input()
+    # reset_CFG()
     print("STEP 14.reset_update_CFG_typed()", flush=True)
     reset_update_CFG_typed()
-    # input()
     print("STEP 15.generate_function_summary_typed()", flush=True)
     generate_function_summary_typed()
     print("STEP 16.binary_static_taint_typed()", flush=True)
     binary_static_taint_typed()
-    # input()
 
     end = time.time()
     f = open("debug_tmp_file", "a")
