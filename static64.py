@@ -153,7 +153,7 @@ class Info(object):
         # insn addr to tainted or not
         self.insn_tainted_map = {}
 
-        self.gpr = ["rax", "rbx", "rcx", "rdx", "rdi", "rsi", "rsp", "rbp", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"]
+        self.gpr = ["rax", "rbx", "rcx", "rdx", "rdi", "rsi", "rsp", "rbp", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "eax", "ebx", "ecx", "edx", "edi", "esi", "esp", "ebp", "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d"]
 
 
         # func addr to func summary map
@@ -234,7 +234,40 @@ class Info(object):
 
 global info
 info = Info()
-
+map_reg={
+    "rax":"eax",
+    "rbx":"ebx",
+    "rcx":"ecx",
+    "rdx":"edx",
+    "rdi":"edi",
+    "rsi":"esi",
+    "rsp":"esp",
+    "rbp":"ebp",
+    "r8":"r8d",
+    "r9":"r9d",
+    "r10":"r10d",
+    "r11":"r11d",
+    "r12":"r12d",
+    "r13":"r13d",
+    "r14":"r14d",
+    "r15":"r15d",
+    "eax":"rax",
+    "ebx":"rbx",
+    "ecx":"rcx",
+    "edx":"rdx",
+    "edi":"rdi",
+    "esi":"rsi",
+    "esp":"rsp",
+    "ebp":"rbp",
+    "r8d":"r8",
+    "r9d":"r9",
+    "r10d":"r10",
+    "r11d":"r11",
+    "r12d":"r12",
+    "r13d":"r13",
+    "r14d":"r14",
+    "r15d":"r15"
+}
 
 def binary_static_taint():
     # check each function in reversed topological order
@@ -766,7 +799,7 @@ def binary_static_taint():
                                         src_op_base_reg_name = info.insnsmap[addr].reg_name(src_op.value.mem.base)
 
                                         # mov stack var via base
-                                        if src_op_base_reg_name == "rsp" and src_op.value.mem.index == 0:
+                                        if src_op_base_reg_name in ["rbp","rsp"] and src_op.value.mem.index == 0:
                                             # print(src_op.value.mem.disp)
                                             if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                 addr] != None:
@@ -835,7 +868,7 @@ def binary_static_taint():
                                     elif src_op.value.mem.base == 0:
                                         # mov stack var via index
                                         if src_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                src_op.value.mem.index) == "rsp":
+                                                src_op.value.mem.index) in ["rbp","rsp"]:
                                             if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                 addr] != None:
                                                 value = info.insn_stack_offset_map[
@@ -879,7 +912,7 @@ def binary_static_taint():
                                     dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                     # mov into stack var via base
-                                    if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
+                                    if dest_op_base_reg_name in ["rbp","rsp"] and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -951,7 +984,7 @@ def binary_static_taint():
 
                                     # mov into stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "rsp":
+                                            dest_op.value.mem.index) in ["rbp","rsp"]:
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -984,7 +1017,7 @@ def binary_static_taint():
                                     dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                     # mov into stack var via base
-                                    if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
+                                    if dest_op_base_reg_name in ["rbp","rsp"] and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -1036,7 +1069,7 @@ def binary_static_taint():
                                 else:
                                     # mov into stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "rsp":
+                                            dest_op.value.mem.index) in ["rbp","rsp"]:
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -1072,7 +1105,7 @@ def binary_static_taint():
 
                                     # dest mem: stack var via base
                                     if info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.base) == "rsp" and dest_op.value.mem.index == 0:
+                                            dest_op.value.mem.base) in ["rbp","rsp"] and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -1125,7 +1158,7 @@ def binary_static_taint():
                                 else:
                                     # dest mem: stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "rsp":
+                                            dest_op.value.mem.index) in ["rbp","rsp"]:
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -1194,7 +1227,7 @@ def generate_function_summary():
     info.func_summary_map_tmp_file = info.binaryfile + "_func_summary_map_tmp_file"
     info.insn_summary_map_tmp_file = info.binaryfile + "_insn_summary_map_tmp_file"
 
-    if os.path.exists(info.func_summary_map_tmp_file) and os.path.exists(info.insn_summary_map_tmp_file):
+    if False and os.path.exists(info.func_summary_map_tmp_file) and os.path.exists(info.insn_summary_map_tmp_file):
 
         info.func_summary_map = {}
         for func_addr in sorted(info.func_addr_map):
@@ -1682,6 +1715,8 @@ def generate_function_summary():
 
                         # update value sets
                         if addr in info.insnsmap:
+                            if addr == 7683:
+                                print("7683")
                             insn = info.insnsmap[addr]
                             if len(insn.operands) == 1 and insn.operands[0].type == X86_OP_REG:
                                 # print("*")
@@ -1787,7 +1822,12 @@ def generate_function_summary():
                                                 # print(hex(src_op.value.mem.disp))
 
                                                 # add global var pointer to dest op reg
-                                                value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp)
+                                                src_op_base_reg_name = info.insnsmap[addr].reg_name(
+                                                    src_op.value.mem.base)
+                                                if src_op_base_reg_name== "rip":
+                                                    value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp + addr)
+                                                else:
+                                                    value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp)
                                                 if dest_reg_name not in insn_summary_map[succ]:
                                                     insn_summary_map[succ][dest_reg_name] = set()
                                                 if dest_reg_name not in insn_summary_map[addr]:
@@ -1811,7 +1851,7 @@ def generate_function_summary():
                                                     src_op.value.mem.base)
 
                                                 # mov stack var via base
-                                                if src_op_base_reg_name == "rsp" and src_op.value.mem.index == 0:
+                                                if src_op_base_reg_name in ["rbp","rsp"] and src_op.value.mem.index == 0:
                                                     # print(src_op.value.mem.disp)
                                                     if addr in info.insn_stack_offset_map and \
                                                             info.insn_stack_offset_map[addr] != None:
@@ -1923,7 +1963,7 @@ def generate_function_summary():
                                             elif src_op.value.mem.base == 0:
                                                 # mov stack var via index
                                                 if src_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                        src_op.value.mem.index) == "rsp":
+                                                        src_op.value.mem.index) in ["rbp","rsp"]:
                                                     if addr in info.insn_stack_offset_map and \
                                                             info.insn_stack_offset_map[addr] != None:
                                                         value = info.insn_stack_offset_map[
@@ -1990,7 +2030,7 @@ def generate_function_summary():
                                             dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                             # mov into stack var via base
-                                            if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
+                                            if dest_op_base_reg_name in ["rbp","rsp"] and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -2107,7 +2147,7 @@ def generate_function_summary():
 
                                             # mov into stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "rsp":
+                                                    dest_op.value.mem.index) in ["rbp","rsp"]:
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -2163,7 +2203,8 @@ def generate_function_summary():
                                             dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                             # mov into stack var via base
-                                            if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
+                                            # TODO:修改这里，适配0x0000(%rip)的形式
+                                            if dest_op_base_reg_name in ["rbp","rsp"] and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -2176,12 +2217,15 @@ def generate_function_summary():
                                             # mov into global var via disp
                                             elif dest_op.value.mem.disp >= info.mmin_data_section_addr \
                                                     and dest_op.value.mem.disp <= info.mmax_data_section_addr:
-                                                # print("*")
-                                                # print(hex(addr))
-                                                # print(hex(dest_op.value.mem.disp))
-                                                # clear dest
-                                                value = dest_op.value.mem.disp
-                                                insn_summary_map[succ][value] = set(["CLEAR"])
+                                                if dest_op_base_reg_name == "rip":
+                                                    insn_summary_map[succ][dest_op.value.mem.disp + addr]=set([insn.operands[1].value.imm])
+                                                else:
+                                                    # print("*")
+                                                    # print(hex(addr))
+                                                    # print(hex(dest_op.value.mem.disp))
+                                                    # clear dest
+                                                    value = dest_op.value.mem.disp
+                                                    insn_summary_map[succ][value] = set(["CLEAR"])
 
                                             # mov global/heap var via base, i.e., dereference global/heap var pointer
                                             elif addr in insn_summary_map and dest_op_base_reg_name in insn_summary_map[
@@ -2215,7 +2259,7 @@ def generate_function_summary():
                                         else:
                                             # mov into stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "rsp":
+                                                    dest_op.value.mem.index) in ["rbp","rsp"]:
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -2290,7 +2334,7 @@ def generate_function_summary():
 
                                             # dest mem: stack var via base
                                             if info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.base) == "rsp" and dest_op.value.mem.index == 0:
+                                                    dest_op.value.mem.base) in ["rbp","rsp"] and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -2343,7 +2387,7 @@ def generate_function_summary():
                                         else:
                                             # dest mem: stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "rsp":
+                                                    dest_op.value.mem.index) in ["rbp","rsp"]:
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -2590,7 +2634,7 @@ def binary_static_taint_typed():
                 [0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48])
         elif taintsource == "recv":
             # info.func_taintedvar_map_typed[info.func_name_map["recv@plt"][0]] = set([0x10])
-            info.func_taintedvar_map_typed[info.func_name_map["recv@plt"][0]] = set(['rsi'])
+            info.func_taintedvar_map_typed[info.func_name_map["recv@plt"][0]] = set(['rsi','rdx','esi','edx'])
         elif taintsource == "recvfrom":
             info.func_taintedvar_map_typed[info.func_name_map["recvfrom@plt"][0]] = set([0x10])
         elif taintsource == "gnutls_record_recv":
@@ -2619,8 +2663,8 @@ def binary_static_taint_typed():
             # print(func_name)
             # print(hex(func_addr))
             # print(hex(func_end_addr))
-            if func_name=="main":
-                print("main")
+            if func_name=="xMBPortTCPPool":
+                print("xMBPortTCPPool")
             if func_addr not in info.insnsmap:
                 continue
             if func_addr not in info.cfg.kb.functions:
@@ -2737,7 +2781,9 @@ def binary_static_taint_typed():
                     # for each call site
                     for callsite in callsites:
                         # print(hex(callsite))
-                        if callsite in callsite_para_values_map and callsite in info.insn_summary_map and callsite in info.insn_stack_offset_map:
+                        if callsite==8119:
+                            print(callsite)
+                        if callsite in callsite_para_values_map and callsite in info.insn_summary_map_typed and callsite in info.insn_stack_offset_map:
                             # print(hex(callsite))
                             esp_value = info.insn_stack_offset_map[callsite]
 
@@ -2746,8 +2792,8 @@ def binary_static_taint_typed():
 
                                 # check how func paras flow to callsites
                                 # caller -> callee
-                                if callsite_para_value in info.insn_summary_map[callsite]:
-                                    if len(info.insn_summary_map[callsite][callsite_para_value].intersection(
+                                if callsite_para_value in info.insn_summary_map_typed[callsite]:
+                                    if len(info.insn_summary_map_typed[callsite][callsite_para_value].intersection(
                                             info.func_taintedvar_map_typed[func_addr])) != 0:
                                         # print("2.1")
                                         # add CALLSITE_P1(-P10)_0x(callsite) to caller
@@ -2912,8 +2958,8 @@ def binary_static_taint_typed():
                                             # add callsite_para_value
                                             info.func_taintedvar_map_typed[func_addr].add(callsite_para_value)
                                             # add values inside callsite_para_value
-                                            if callsite_para_value in info.insn_summary_map[callsite]:
-                                                for stack_contained_value in info.insn_summary_map[callsite][
+                                            if callsite_para_value in info.insn_summary_map_typed[callsite]:
+                                                for stack_contained_value in info.insn_summary_map_typed[callsite][
                                                     callsite_para_value]:
                                                     if stack_contained_value != "rax":
                                                         info.func_taintedvar_map_typed[func_addr].add(
@@ -2930,12 +2976,15 @@ def binary_static_taint_typed():
                             # 对于寄存器传参
                             for callsite_reg_para_value in callsite_reg_para_values_map[callsite]:
                                 # caller -> callee
-                                if callsite_reg_para_value in info.insn_summary_map[callsite]:
-                                    if len(info.insn_summary_map[callsite][callsite_reg_para_value].intersection(
+
+                                if callsite_reg_para_value in info.insn_summary_map_typed[callsite]:
+                                    tmt=info.func_taintedvar_map_typed[func_addr]
+                                    if len(info.insn_summary_map_typed[callsite][callsite_reg_para_value].intersection(
                                         info.func_taintedvar_map_typed[func_addr])) != 0:
                                         # add CALLSITE_R1(-R10)_0x(callsite) to caller
                                         value = "CALLSITE_" + callsite_reg_para_value + "_" + hex(callsite)
                                         info.func_taintedvar_map_typed[func_addr].add(value)
+                                        print("taint para->callee:", callsite, value)
 
                                         # add para reg name to callee
                                         if callsite in info.callsite_map:
@@ -2953,18 +3002,27 @@ def binary_static_taint_typed():
                                             info.func_taintedvar_map_typed[func_addr].add(para_value)
                                             # add callsite_para_value
                                             info.func_taintedvar_map_typed[func_addr].add(callsite_reg_para_value)
+                                            # 额外添加的规则9.4 传回时将caller中的寄存器的*值集*也污染（而不仅仅是寄存器本身）
+                                            for v in info.insn_summary_map_typed[callsite][callsite_reg_para_value]:
+                                                info.func_taintedvar_map_typed[func_addr].add(v)
+                                                # if isinstance(v, int) and v==25729:
+                                                #     print("here!!!")
+
+                                            print("add taint pointer:", callsite, para_value,callsite_reg_para_value)
                                             # add values inside callsite_para_value
                                             # 直接当成所有参数都是指针来处理
-                                            if callsite_reg_para_value in info.insn_summary_map[callsite]:
-                                                for stack_contained_value in info.insn_summary_map[callsite][
-                                                    callsite_reg_para_value]:
-                                                    if stack_contained_value != "rax":
-                                                        info.func_taintedvar_map_typed[func_addr].add(
-                                                            stack_contained_value)
+                                            # if callsite_reg_para_value in info.insn_summary_map[callsite]:
+                                            #     for stack_contained_value in info.insn_summary_map[callsite][
+                                            #         callsite_reg_para_value]:
+                                            #         if stack_contained_value != "rax":
+                                            #             print("add taint ret stack:", callsite, stack_contained_value)
+                                            #             info.func_taintedvar_map_typed[func_addr].add(
+                                            #                 stack_contained_value)
                                                         # if callee return value is tainted, add it to caller
                                             if "rax" in info.func_taintedvar_map_typed[callee]:
                                                 # print("2.5")
                                                 # add CALLSITE_EAX_0x(callsite)
+                                                print("add taint ret rax:", callsite, ret_value)
                                                 info.func_taintedvar_map_typed[func_addr].add(ret_value)
 
                             # 对于xmm寄存器传参 暂不实现（因为没有这样的指令）
@@ -2981,6 +3039,7 @@ def binary_static_taint_typed():
                                         if "rax" in info.func_taintedvar_map_typed[callee]:
                                             # print("2.5")
                                             # add CALLSITE_EAX_0x(callsite)
+                                            print("add taint ret:", callsite, ret_value)
                                             info.func_taintedvar_map_typed[func_addr].add(ret_value)
 
                         # after analyzing each call site, clear plt func taints except taint source func
@@ -2998,14 +3057,22 @@ def binary_static_taint_typed():
                 # print(info.func_taintedvar_summary_map_typed[func_addr])
 
                 # add var containing tainted var to tainted vars
+                #TODO:这个地方的指针没有处理，导致aucBuf后面的aucBuf+0x4这种不能污染
                 func_gvars = set()
                 addr = func_addr
                 while addr <= func_end_addr and addr != -1:
                     # print(hex(addr))
-                    if addr in info.insn_summary_map:
-                        for ab_loc in info.insn_summary_map[addr]:
-                            for ab_loc_1 in info.insn_summary_map[addr][ab_loc]:
+                    if addr==8119:
+                        print(8119)
+                    if addr==8102:
+                        print(8102)#1fa6: lea (%rax,%rcx,1),%rsi
+                    if addr == 8510:
+                        print(8510)  # 213e movw   $0x0,0x4341(%rip)
+                    if addr in info.insn_summary_map_typed:
+                        for ab_loc in info.insn_summary_map_typed[addr]:
+                            for ab_loc_1 in info.insn_summary_map_typed[addr][ab_loc]:
                                 if ab_loc_1 in info.func_taintedvar_map_typed[func_addr]:
+                                    print("add taint:",addr,ab_loc,ab_loc_1)
                                     info.func_taintedvar_map_typed[func_addr].add(ab_loc)
 
                                 # if ab_loc in info.gpr:
@@ -3026,10 +3093,16 @@ def binary_static_taint_typed():
                                 #	print(ab_loc_1)
                                 # break
 
+                                #10.4 change: extra collect gvars
+                                if isinstance(ab_loc_1,
+                                              int) and ab_loc_1 >= info.mmin_data_section_addr and ab_loc_1 <= info.mmax_data_section_addr:
+                                    func_gvars.add(ab_loc_1)
+
                             # collect gvars
                             if isinstance(ab_loc,
                                           int) and ab_loc >= info.mmin_data_section_addr and ab_loc <= info.mmax_data_section_addr:
                                 func_gvars.add(ab_loc)
+
                             # print("*")
                             # print(hex(addr))
                             # print(hex(ab_loc))
@@ -3046,7 +3119,7 @@ def binary_static_taint_typed():
                         if tainted_var >= info.mmin_data_section_addr and tainted_var <= info.mmax_data_section_addr:
                             for func_gvar in func_gvars:
                                 if isinstance(func_gvar, int):
-                                    if func_gvar > tainted_var and func_gvar <= tainted_var + 0x100:
+                                    if (func_gvar > tainted_var and func_gvar <= tainted_var + 0x100) or (func_gvar < tainted_var and func_gvar >= tainted_var - 0x02):
                                         to_addr_gvars.add(func_gvar)
 
                 # for to_add_gvar in sorted(to_addr_gvars):
@@ -3076,13 +3149,21 @@ def binary_static_taint_typed():
             # print("6")
             # print(info.func_taintedvar_map_typed[func_addr])
 
+            # 这里是对全局变量进行污染的，看一下GLOBAL_POINTER应该在哪里传播
             # update other functions using global variables
             tainted_gvars = set()
+            tainted_gpointer = set()# TODO:collect global pointer and then update other functions
             for tainted_var in info.func_taintedvar_map_typed[func_addr]:
                 if isinstance(tainted_var, int):
                     # print(hex(tainted_var))
                     if tainted_var >= info.mmin_data_section_addr and tainted_var <= info.mmax_data_section_addr:
                         tainted_gvars.add(tainted_var)
+                elif tainted_var.startswith("GLOBAL_POINTER_"):
+                    tainted_gpointer.add(tainted_var)
+
+
+
+
 
             for func_addr_1 in info.ordered_func_addresses:
                 # func_name_1 = info.func_addr_map[func_addr_1][0]
@@ -3099,19 +3180,120 @@ def binary_static_taint_typed():
                     continue
                 info.func_taintedvar_map_typed[func_addr_1] = info.func_taintedvar_map_typed[func_addr_1].union(
                     tainted_gvars)
+                info.func_taintedvar_map_typed[func_addr_1] = info.func_taintedvar_map_typed[func_addr_1].union(
+                    tainted_gpointer)
 
             # identify tainted insn based on tainted values for this function
             finish_to_next_insn_addr = False
             addr = func_addr
+
             while addr <= func_end_addr and addr != -1:
+                if addr == 8244:
+                    print(addr)
+                if addr == 8095:#1f9f
+                    print(addr)
+                if addr==8119:
+                    print(8119)
+                if addr==8102: #1fa6 lea指令
+                    print(8102)
+                if addr==8510:
+                    print(8510)# 213e movw   $0x0,0x4341(%rip)        # 6488 <usTCPBufPos> 检查一下这个全局变量有没有被置为0
+                if addr==8198:
+                    print(8198)# 2006 mov    %ax,0x447b(%rip)
+                if addr==8474:
+                    print(8474)# 211a mov    %rdi,-0x8(%rbp)
+                if addr == 8493:
+                    print(8493)  # 212d mov    %rdx,(%rax)
+                if addr ==10467:
+                    print(10467) # 28e3 lea    -0x18(%rbp),%rdx
+                if addr == 11478:
+                    print(11478)
+                if addr == 11539:
+                    print(11539)
+                if addr == 11550:
+                    print(11550)
+
+                if addr == 6506:
+                    print(6499)
+
+                if addr ==8218:
+                    print(8218)
+                if addr == 8080:
+                    print(8080)
+                if addr == 8254:
+                    print(8073)
+                if addr == 9988:
+                    print(9985)
+
+                if addr == 10063:
+                    print(10063)
+                if addr == 10213:
+                    print(10213)
+
+                if addr == 10692:
+                    print(10692)
+                if addr == 12333:
+                    print(12333)
 
                 ab_locs_containing_tainted_value = set()
 
-                for ab_loc in info.insn_summary_map[addr]:
+                # lea (%rax,%rcx,1),%rsi的 insn_summary_map的rsi为clear，这是个问题 但是rcx有值集，eax有17646这个值（对应0x44ee）
+                # 而且对于global变量的值，比如这里的movzwl 0x44ee(%rip),%eax        # 6488 <usTCPBufPos> eax中存入的是0x44ee 这应该是指这个地址里存的值 而带有global pointer的是地址
+                tp=info.insn_summary_map_typed[addr]
+                # 之后要做的是根据现有值集和指令（目前是lea）对值集进行补充更改
+                # 主要疑问是地址和地址内容怎么相加
+
+                for ab_loc in info.insn_summary_map_typed[addr]:
                     # some ab loc contains tainted values
                     if len(info.func_taintedvar_map_typed[func_addr].intersection(
-                            info.insn_summary_map[addr][ab_loc])) != 0 and addr in info.insnsmap:
+                            info.insn_summary_map_typed[addr][ab_loc]-set(["CLEAR"]))) != 0 and addr in info.insnsmap:
                         ab_locs_containing_tainted_value.add(ab_loc)
+
+                # 补充由于summary map是该条指令执行前 所带来的一些污染内容的忽略
+                tmp_set=set()
+                if addr in info.insnsmap:
+                    insn = info.insnsmap[addr]
+                    if len(insn.operands)==2:
+                        if insn.operands[1].type == X86_OP_MEM:
+                            src_op=insn.operands[1]
+                            src_op_base_reg_name = info.insnsmap[addr].reg_name(src_op.value.mem.base)
+                            if src_op.value.mem.disp >= info.mmin_data_section_addr \
+                                    and src_op.value.mem.disp <= info.mmax_data_section_addr:
+                                if src_op_base_reg_name == "rip":
+                                    if insn.mnemonic.startswith("lea"):#因为lea指令的源操作数是内存时，是一个指针
+                                        value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp + addr)
+                                    else:
+                                        value = (src_op.value.mem.disp + addr)
+                                else:
+                                    if insn.mnemonic.startswith("lea"):
+                                        value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp)
+                                    else:
+                                        value = (src_op.value.mem.disp)
+                                tmp_set.add(value)
+                            elif src_op_base_reg_name == "rbp":
+                                value = (info.insn_stack_offset_map[addr] + dest_op.value.mem.disp)
+                                tmp_set.add(value)
+                        if insn.operands[0].type == X86_OP_MEM:
+                            dest_op=insn.operands[0]
+                            dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
+                            if dest_op.value.mem.disp >= info.mmin_data_section_addr \
+                                    and dest_op.value.mem.disp <= info.mmax_data_section_addr:
+                                if dest_op_base_reg_name == "rip":
+                                    value =  (dest_op.value.mem.disp + addr)
+                                else:
+                                    value =  (dest_op.value.mem.disp)
+                                tmp_set.add(value)
+                            elif dest_op_base_reg_name == "rbp":
+                                value = (info.insn_stack_offset_map[addr] + dest_op.value.mem.disp)
+                                tmp_set.add(value)
+
+                        if len(info.func_taintedvar_map_typed[func_addr].intersection(
+                            tmp_set)) != 0:
+                            for ab_loc in tmp_set:
+                                ab_locs_containing_tainted_value.add(ab_loc)
+
+
+
 
                 # check whether the tainted value is actually read/written in this insn
                 # check ab_loc is register, stack, or glbal/heap
@@ -3154,6 +3336,10 @@ def binary_static_taint_typed():
                                 src_reg_name = insn.reg_name(insn.operands[1].value.reg)
                                 values_used_set.add(dest_reg_name)
                                 values_used_set.add(src_reg_name)
+                                if dest_reg_name in register_map:
+                                    values_used_set.add(register_map[dest_reg_name])
+                                if src_reg_name in register_map:
+                                    values_used_set.add(register_map[src_reg_name])
 
                             elif insn.operands[0].type == X86_OP_REG and insn.operands[1].type == X86_OP_MEM:
                                 dest_reg_name = insn.reg_name(insn.operands[0].value.reg)
@@ -3166,6 +3352,7 @@ def binary_static_taint_typed():
                                 # print(insn.operands[1].type)
 
                                 # lea insn
+                                # TODO：这里的value可能需要改成不仅仅只判断偏移量的
                                 if insn.mnemonic.startswith("lea") and dest_reg_name in info.gpr:
                                     # lea insn: check whether lea global var addr and generate global var pointer
                                     if src_op.value.mem.disp >= info.mmin_data_section_addr \
@@ -3173,12 +3360,20 @@ def binary_static_taint_typed():
                                         # print("*")
                                         # print(hex(addr))
                                         # print(hex(src_op.value.mem.disp))
-                                        values_used_set.add(dest_reg_name)
-                                        values_used_set.add(value)
+                                        # values_used_set.add(dest_reg_name)
+                                        # values_used_set.add(value)
                                         # add global var pointer to dest op reg
-                                        value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp)
+                                        src_op_base_reg_name = info.insnsmap[addr].reg_name(src_op.value.mem.base)
+                                        if src_op_base_reg_name == "rip":
+                                            value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp + addr)
+                                        else:
+                                            value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp)
                                         values_used_set.add(dest_reg_name)
                                         values_used_set.add(value)
+                                    elif src_op.value.mem.base!=0 and src_op.value.mem.index==0 and info.insnsmap[addr].reg_name(src_op.value.mem.base) in ["rsp","rbp"]:
+                                        value = info.insn_stack_offset_map[addr] + src_op.value.mem.disp
+                                        values_used_set.add(value)
+                                        values_used_set.add(dest_reg_name)
                                     else:
                                         values_used_set.add(dest_reg_name)
 
@@ -3190,7 +3385,7 @@ def binary_static_taint_typed():
                                         src_op_base_reg_name = info.insnsmap[addr].reg_name(src_op.value.mem.base)
 
                                         # mov stack var via base
-                                        if src_op_base_reg_name == "rsp" and src_op.value.mem.index == 0:
+                                        if src_op_base_reg_name in ["rbp","rsp"] and src_op.value.mem.index == 0:
                                             # print(src_op.value.mem.disp)
                                             if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                 addr] != None:
@@ -3210,15 +3405,18 @@ def binary_static_taint_typed():
                                             # print(hex(addr))
                                             # print(hex(src_op.value.mem.disp))
                                             # add global var to dest op reg
-                                            value = src_op.value.mem.disp
+                                            if src_op_base_reg_name == "rip":
+                                                value = src_op.value.mem.disp + addr
+                                            else:
+                                                value = src_op.value.mem.disp
                                             values_used_set.add(dest_reg_name)
                                             values_used_set.add(value)
 
                                         # mov global/heap var via base, i.e., dereference global/heap var pointer
-                                        elif addr in info.insn_summary_map and src_op_base_reg_name in \
-                                                info.insn_summary_map[addr]:
+                                        elif addr in info.insn_summary_map_typed and src_op_base_reg_name in \
+                                                info.insn_summary_map_typed[addr]:
                                             dereference = False
-                                            for base_reg_value in info.insn_summary_map[addr][src_op_base_reg_name]:
+                                            for base_reg_value in info.insn_summary_map_typed[addr][src_op_base_reg_name]:
                                                 if not isinstance(base_reg_value, int):
                                                     # global pointer dereference
                                                     if base_reg_value.startswith("GLOBAL_POINTER_"):
@@ -3259,7 +3457,7 @@ def binary_static_taint_typed():
                                     elif src_op.value.mem.base == 0:
                                         # mov stack var via index
                                         if src_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                src_op.value.mem.index) == "rsp":
+                                                src_op.value.mem.index) in ["rbp","rsp"]:
                                             if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                 addr] != None:
                                                 value = info.insn_stack_offset_map[
@@ -3294,16 +3492,18 @@ def binary_static_taint_typed():
                                     values_used_set.add(dest_reg_name)
                             elif insn.operands[0].type == X86_OP_MEM and insn.operands[1].type == X86_OP_REG:
                                 src_reg_name = insn.reg_name(insn.operands[1].value.reg)
+                                if src_reg_name not in info.gpr:
+                                    src_reg_name = register_map[src_reg_name]
                                 dest_op = insn.operands[0]
 
                                 # all mov/cmov, no lea, as dest is mem
-
-                                if dest_op.value.mem.base != 0 and src_reg_name in info.gpr:
+                                # TODO:这里需要加入 rip
+                                if dest_op.value.mem.base != 0 :
 
                                     dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                     # mov into stack var via base
-                                    if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
+                                    if dest_op_base_reg_name in ["rsp","rbp"] and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -3311,7 +3511,10 @@ def binary_static_taint_typed():
                                             # print("*")
                                             # print(hex(addr))
                                             # print(value)
-                                            values_used_set.add(src_reg_name)
+                                            if src_reg_name in info.gpr:
+                                                values_used_set.add(src_reg_name)
+                                                if src_reg_name in register_map:
+                                                    values_used_set.add(register_map[src_reg_name])
                                             values_used_set.add(value)
 
                                     # mov into global var via disp
@@ -3321,14 +3524,19 @@ def binary_static_taint_typed():
                                         # print(hex(addr))
                                         # print(hex(dest_op.value.mem.disp))
                                         # add global var to dest
-                                        value = dest_op.value.mem.disp
-                                        values_used_set.add(src_reg_name)
+                                        if src_op_base_reg_name == "rip":
+                                            value = src_op.value.mem.disp + addr
+                                        else:
+                                            value = dest_op.value.mem.disp
+                                        if src_reg_name in info.gpr:
+                                            values_used_set.add(src_reg_name)
+                                        # values_used_set.add(src_reg_name)
                                         values_used_set.add(value)
 
                                     # mov global/heap var via base, i.e., dereference global/heap var pointer
-                                    elif addr in info.insn_summary_map and dest_op_base_reg_name in \
-                                            info.insn_summary_map[addr]:
-                                        for base_reg_value in info.insn_summary_map[addr][dest_op_base_reg_name]:
+                                    elif addr in info.insn_summary_map_typed and dest_op_base_reg_name in \
+                                            info.insn_summary_map_typed[addr]:
+                                        for base_reg_value in info.insn_summary_map_typed[addr][dest_op_base_reg_name]:
                                             if not isinstance(base_reg_value, int):
                                                 # global pointer dereference
                                                 if base_reg_value.startswith("GLOBAL_POINTER_"):
@@ -3346,7 +3554,9 @@ def binary_static_taint_typed():
                                                     # print(insn.mnemonic)
                                                     # print(insn.op_str)
                                                     # print(hex(dest_op.value.mem.disp))
-                                                    values_used_set.add(src_reg_name)
+                                                    if src_reg_name in info.gpr:
+                                                        values_used_set.add(src_reg_name)
+                                                    # values_used_set.add(src_reg_name)
                                                     values_used_set.add(value)
                                                     break
 
@@ -3366,16 +3576,37 @@ def binary_static_taint_typed():
                                                     # print(insn.mnemonic)
                                                     # print(insn.op_str)
                                                     # print(hex(dest_op.value.mem.disp))
-                                                    values_used_set.add(src_reg_name)
+                                                    if src_reg_name in info.gpr:
+                                                        values_used_set.add(src_reg_name)
+                                                    # values_used_set.add(src_reg_name)
                                                     values_used_set.add(value)
                                                     break
+                                                # TODO:这里缺少了mov %rdx,(%rax)的适配
+                                                # 如果rax中是一个寄存器
+                                                elif base_reg_value.startswith("r") or base_reg_value.startswith("e"):
+                                                    if src_reg_name in info.gpr:
+                                                        values_used_set.add(src_reg_name)
+                                                    values_used_set.add(base_reg_value)
+                                            # 对于mov %dl,(%rax)这类指令的适配 rax中是一个内存
+                                            else:
+                                                value = base_reg_value
+                                                if src_reg_name in info.gpr:
+                                                    values_used_set.add(src_reg_name)
+                                                # values_used_set.add(src_reg_name)
+                                                values_used_set.add(value)
+
+                                    elif dest_op_base_reg_name == "rip":
+                                        value = dest_op.value.mem.disp + addr
+                                        if src_reg_name in info.gpr:
+                                            values_used_set.add(src_reg_name)
+                                        values_used_set.add(value)
 
 
                                 elif dest_op.value.mem.base == 0 and src_reg_name in info.gpr:
 
                                     # mov into stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "rsp":
+                                            dest_op.value.mem.index) in ["rbp","rsp"]:
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -3408,7 +3639,7 @@ def binary_static_taint_typed():
                                     dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                     # mov into stack var via base
-                                    if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
+                                    if dest_op_base_reg_name in ["rbp","rsp"] and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -3425,13 +3656,16 @@ def binary_static_taint_typed():
                                         # print(hex(addr))
                                         # print(hex(dest_op.value.mem.disp))
                                         # clear dest
-                                        value = dest_op.value.mem.disp
+                                        if dest_op_base_reg_name == "rip":
+                                            value = dest_op.value.mem.disp + addr
+                                        else:
+                                            value = dest_op.value.mem.disp
                                         values_used_set.add(value)
 
                                     # mov global/heap var via base, i.e., dereference global/heap var pointer
-                                    elif addr in info.insn_summary_map and dest_op_base_reg_name in \
-                                            info.insn_summary_map[addr]:
-                                        for base_reg_value in info.insn_summary_map[addr][dest_op_base_reg_name]:
+                                    elif addr in info.insn_summary_map_typed and dest_op_base_reg_name in \
+                                            info.insn_summary_map_typed[addr]:
+                                        for base_reg_value in info.insn_summary_map_typed[addr][dest_op_base_reg_name]:
                                             if not isinstance(base_reg_value, int):
                                                 # global pointer dereference
                                                 if base_reg_value.startswith("GLOBAL_POINTER_"):
@@ -3460,7 +3694,7 @@ def binary_static_taint_typed():
                                 else:
                                     # mov into stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "rsp":
+                                            dest_op.value.mem.index) in ["rbp","rsp"]:
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -3484,6 +3718,8 @@ def binary_static_taint_typed():
                         else:
                             if insn.operands[0].type == X86_OP_REG:
                                 dest_reg_name = insn.reg_name(insn.operands[0].value.reg)
+                                if dest_reg_name in register_map:
+                                    dest_reg_name = register_map[dest_reg_name]
                                 if dest_reg_name in info.gpr:
                                     values_used_set.add(dest_reg_name)
                             elif insn.operands[0].type == X86_OP_MEM:
@@ -3496,7 +3732,7 @@ def binary_static_taint_typed():
 
                                     # dest mem: stack var via base
                                     if info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.base) == "rsp" and dest_op.value.mem.index == 0:
+                                            dest_op.value.mem.base) in ["rbp","rsp"] and dest_op.value.mem.index == 0:
                                         # print(dest_op.value.mem.disp)
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
@@ -3517,9 +3753,9 @@ def binary_static_taint_typed():
                                         values_used_set.add(value)
 
                                     # dest mem: global/heap var via base, i.e., dereference global/heap var pointer
-                                    elif addr in info.insn_summary_map and dest_op_base_reg_name in \
-                                            info.insn_summary_map[addr]:
-                                        for base_reg_value in info.insn_summary_map[addr][dest_op_base_reg_name]:
+                                    elif addr in info.insn_summary_map_typed and dest_op_base_reg_name in \
+                                            info.insn_summary_map_typed[addr]:
+                                        for base_reg_value in info.insn_summary_map_typed[addr][dest_op_base_reg_name]:
                                             if not isinstance(base_reg_value, int):
                                                 # global pointer dereference
                                                 if base_reg_value.startswith("GLOBAL_POINTER_"):
@@ -3549,7 +3785,7 @@ def binary_static_taint_typed():
                                 else:
                                     # dest mem: stack var via index
                                     if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                            dest_op.value.mem.index) == "rsp":
+                                            dest_op.value.mem.index) in ["rbp","rsp"]:
                                         if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                             addr] != None:
                                             value = info.insn_stack_offset_map[
@@ -3658,7 +3894,7 @@ def generate_function_summary_typed():
     info.func_summary_map_typed_tmp_file = info.binaryfile + "_func_summary_map_typed_tmp_file"
     info.insn_summary_map_typed_tmp_file = info.binaryfile + "_insn_summary_map_typed_tmp_file"
 
-    if os.path.exists(info.func_summary_map_typed_tmp_file) and os.path.exists(info.insn_summary_map_typed_tmp_file):
+    if False and os.path.exists(info.func_summary_map_typed_tmp_file) and os.path.exists(info.insn_summary_map_typed_tmp_file):
 
         info.func_summary_map_typed = {}
         for func_addr in sorted(info.func_addr_map):
@@ -4380,12 +4616,59 @@ def generate_function_summary_typed():
 
                         # update value sets
                         if addr in info.insnsmap:
+                            if addr == 8102:
+                                print(addr)
+                            if addr == 8073:
+                                print(addr)
+                            if addr == 8474: # 211a  mov    %rdi,-0x8(%rbp)
+                                print(8474)
+                            if addr == 10467:
+                                print(10467)
+                            if addr == 11478:
+                                print(11478)
+                            if addr == 11439:
+                                print(11439)
+                            if addr == 11464:
+                                print(11464)
+                            if addr == 11499:
+                                print(11499)
+                            if addr == 11502:
+                                print(11502)
+                            if addr == 11520:
+                                print(11520)
+                            if addr == 11524:
+                                print(11524)
+                            if addr == 11528:
+                                print(11528)
+                            if addr == 11535:
+                                print(11535)
+                            if addr == 11539:
+                                print(11539)
+
+                            if addr == 6519:
+                                print(6499)
+
+                            if addr == 8218:
+                                print(8218)
+                            if addr ==8251:
+                                print(8080)
+                            if addr == 8073:
+                                print(8073)
+                            if addr == 9988:
+                                print(9978)
+
+                            if addr == 12323:
+                                print(12218)
+                            if addr ==10059:
+                                print(10059)
+
+
                             insn = info.insnsmap[addr]
                             if len(insn.operands) == 1 and insn.operands[0].type == X86_OP_REG:
                                 # print("*")
                                 # print(hex(addr))
                                 # print(insn.mnemonic)
-                                # print(insn.op_str)
+                                # print(insn.op_str)0
                                 # print(insn.reg_name(insn.operands[0].value.reg))
                                 reg_name = insn.reg_name(insn.operands[0].value.reg)
                                 if reg_name in info.gpr:
@@ -4453,20 +4736,35 @@ def generate_function_summary_typed():
                                     if insn.operands[0].type == X86_OP_REG and insn.operands[1].type == X86_OP_REG:
                                         dest_reg_name = insn.reg_name(insn.operands[0].value.reg)
                                         src_reg_name = insn.reg_name(insn.operands[1].value.reg)
+                                        if src_reg_name not in info.gpr:
+                                            src_reg_name=register_map[src_reg_name]
                                         if dest_reg_name in info.gpr and src_reg_name in info.gpr:
                                             if src_reg_name not in insn_summary_map_typed[addr]:
                                                 insn_summary_map_typed[addr][src_reg_name] = set([src_reg_name])
+                                                insn_summary_map_typed[addr][map_reg[src_reg_name]] = set([map_reg[src_reg_name]])
                                             if dest_reg_name not in insn_summary_map_typed[succ]:
                                                 insn_summary_map_typed[succ][dest_reg_name] = set()
                                             if dest_reg_name not in insn_summary_map_typed[addr]:
                                                 insn_summary_map_typed[addr][dest_reg_name] = set([dest_reg_name])
+                                                insn_summary_map_typed[addr][map_reg[dest_reg_name]] = set([map_reg[dest_reg_name]])
+
                                             if dest_reg_name not in old:
                                                 old[dest_reg_name] = set()
-                                            insn_summary_map_typed[succ][dest_reg_name] = \
+                                            if src_reg_name in register_map:
+                                                src_reg_name = register_map[src_reg_name]
+
+                                            if insn_summary_map_typed[succ][dest_reg_name].union(
+                                                    insn_summary_map_typed[addr][src_reg_name]) == \
+                                                    insn_summary_map_typed[addr][dest_reg_name]:
+                                                pass
+                                            else:
+                                                insn_summary_map_typed[succ][dest_reg_name] = \
                                                 copy.deepcopy((insn_summary_map_typed[succ][dest_reg_name].union(
                                                     insn_summary_map_typed[addr][src_reg_name]) \
                                                                - insn_summary_map_typed[addr][dest_reg_name]).union(
                                                     old[dest_reg_name]))
+                                            # 将诸如eax和rax的值集变为一致
+                                            insn_summary_map_typed[succ][map_reg[dest_reg_name]]=copy.deepcopy(insn_summary_map_typed[succ][dest_reg_name])
 
                                     elif insn.operands[0].type == X86_OP_REG and insn.operands[1].type == X86_OP_MEM:
                                         dest_reg_name = insn.reg_name(insn.operands[0].value.reg)
@@ -4481,6 +4779,11 @@ def generate_function_summary_typed():
                                         # lea insn
                                         if insn.mnemonic.startswith("lea") and dest_reg_name in info.gpr:
                                             # lea insn: check whether lea global var addr and generate global var pointer
+                                            # TODO:只用偏移量来判断是否是全局指针（具有一定的合理性，因为静态分析时寄存器的值并不确定，
+                                            #  但是对于lea (%rax,%rcx,1),%rsi 就完全不能传递了，导致错误）
+                                            # 或者是判断这里的rax rcx在值集里的值 但这个阶段是获取不了值集的，所有行不通 或许要在下一个阶段进行特例传播
+                                            src_op_base_reg_name = info.insnsmap[addr].reg_name(
+                                                src_op.value.mem.base)
                                             if src_op.value.mem.disp >= info.mmin_data_section_addr \
                                                     and src_op.value.mem.disp <= info.mmax_data_section_addr:
                                                 # print("*")
@@ -4488,7 +4791,17 @@ def generate_function_summary_typed():
                                                 # print(hex(src_op.value.mem.disp))
 
                                                 # add global var pointer to dest op reg
-                                                value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp)
+                                                # value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp)
+
+                                                # CHANGE:针对64位的改动，rip当前地址的值+偏移量的寻址
+                                                if src_op_base_reg_name== "rip":
+                                                    value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp + addr)
+                                                    addr_value = src_op.value.mem.disp + addr
+                                                else:
+                                                    value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp)
+                                                    addr_value = src_op.value.mem.disp
+                                                # 此处再加入lea (%rax,%rcx,1),%rsi中，将rax rcx的值集加入rsi的逻辑 应该是修改value
+
                                                 if dest_reg_name not in insn_summary_map_typed[succ]:
                                                     insn_summary_map_typed[succ][dest_reg_name] = set()
                                                 if dest_reg_name not in insn_summary_map_typed[addr]:
@@ -4497,11 +4810,93 @@ def generate_function_summary_typed():
                                                     old[dest_reg_name] = set()
                                                 insn_summary_map_typed[succ][dest_reg_name] = \
                                                     copy.deepcopy(
-                                                        (insn_summary_map_typed[succ][dest_reg_name].union(set([value])) \
+                                                        (insn_summary_map_typed[succ][dest_reg_name].union(set([value,addr_value])) \
                                                          - insn_summary_map_typed[addr][dest_reg_name]).union(
                                                             old[dest_reg_name]))
+                                                # 将诸如eax和rax的值集变为一致
+                                                insn_summary_map_typed[succ][map_reg[dest_reg_name]] = copy.deepcopy(
+                                                    insn_summary_map_typed[succ][dest_reg_name])
+
+                                            elif src_op.value.mem.base!=0 and src_op.value.mem.index!=0:
+                                                src_op_base_reg_name = info.insnsmap[addr].reg_name(
+                                                    src_op.value.mem.base)
+                                                src_op_index_reg_name = info.insnsmap[addr].reg_name(
+                                                    src_op.value.mem.index)
+                                                if dest_reg_name not in insn_summary_map_typed[succ]:
+                                                    insn_summary_map_typed[succ][dest_reg_name] = set()
+                                                if dest_reg_name not in insn_summary_map_typed[addr]:
+                                                    insn_summary_map_typed[addr][dest_reg_name] = set([dest_reg_name])
+                                                if dest_reg_name not in old:
+                                                    old[dest_reg_name] = set()
+                                                insn_summary_map_typed[succ][dest_reg_name] = \
+                                                    copy.deepcopy(
+                                                        (insn_summary_map_typed[succ][dest_reg_name].union(insn_summary_map_typed[addr][src_op_base_reg_name]).union(insn_summary_map_typed[addr][src_op_index_reg_name]) \
+                                                         - insn_summary_map_typed[addr][dest_reg_name]).union(
+                                                            old[dest_reg_name]))
+                                                # 将诸如eax和rax的值集变为一致
+                                                insn_summary_map_typed[succ][map_reg[dest_reg_name]] = copy.deepcopy(
+                                                    insn_summary_map_typed[succ][dest_reg_name])
+                                            elif src_op.value.mem.base!=0 and src_op.value.mem.index==0 and info.insnsmap[addr].reg_name(src_op.value.mem.base) in ["rsp","rbp"]:
+                                                # src_op_base_reg_name = info.insnsmap[addr].reg_name(src_op.value.mem.base)
+                                                value = info.insn_stack_offset_map[addr] + src_op.value.mem.disp
+                                                pointer_value = "DOMAIN_POINTER_" + str(info.insn_stack_offset_map[addr] + src_op.value.mem.disp)
+                                                if value not in insn_summary_map_typed[addr]:
+                                                    insn_summary_map_typed[addr][value] = set([value])
+                                                if dest_reg_name not in insn_summary_map_typed[succ]:
+                                                    insn_summary_map_typed[succ][dest_reg_name] = set()
+                                                if dest_reg_name not in insn_summary_map_typed[addr]:
+                                                    insn_summary_map_typed[addr][dest_reg_name] = set(
+                                                        [dest_reg_name])
+                                                if dest_reg_name not in old:
+                                                    old[dest_reg_name] = set()
+                                                insn_summary_map_typed[succ][dest_reg_name] = \
+                                                    copy.deepcopy(
+                                                        (insn_summary_map_typed[succ][dest_reg_name].union( \
+                                                            insn_summary_map_typed[addr][value]).union(set([pointer_value])) \
+                                                         - insn_summary_map_typed[addr][dest_reg_name]).union(
+                                                            old[dest_reg_name]))
+                                                # 将诸如eax和rax的值集变为一致
+                                                insn_summary_map_typed[succ][
+                                                    map_reg[dest_reg_name]] = copy.deepcopy(
+                                                    insn_summary_map_typed[succ][dest_reg_name])
+                                            elif src_op_base_reg_name== "rip":
+                                                value = "GLOBAL_POINTER_" + hex(src_op.value.mem.disp + addr)
+                                                addr_value = src_op.value.mem.disp + addr
+                                                if dest_reg_name not in insn_summary_map_typed[succ]:
+                                                    insn_summary_map_typed[succ][dest_reg_name] = set()
+                                                if dest_reg_name not in insn_summary_map_typed[addr]:
+                                                    insn_summary_map_typed[addr][dest_reg_name] = set([dest_reg_name])
+                                                if dest_reg_name not in old:
+                                                    old[dest_reg_name] = set()
+                                                insn_summary_map_typed[succ][dest_reg_name] = \
+                                                    copy.deepcopy(
+                                                        (insn_summary_map_typed[succ][dest_reg_name].union(set([value,addr_value])) \
+                                                         - insn_summary_map_typed[addr][dest_reg_name]).union(
+                                                            old[dest_reg_name]))
+                                                # 将诸如eax和rax的值集变为一致
+                                                insn_summary_map_typed[succ][map_reg[dest_reg_name]] = copy.deepcopy(
+                                                    insn_summary_map_typed[succ][dest_reg_name])
+                                            elif src_op_base_reg_name in insn_summary_map_typed[addr]:
+                                                if dest_reg_name not in insn_summary_map_typed[succ]:
+                                                    insn_summary_map_typed[succ][dest_reg_name] = set()
+                                                if dest_reg_name not in insn_summary_map_typed[addr]:
+                                                    insn_summary_map_typed[addr][dest_reg_name] = set([dest_reg_name])
+                                                if dest_reg_name not in old:
+                                                    old[dest_reg_name] = set()
+                                                insn_summary_map_typed[succ][dest_reg_name] = \
+                                                    copy.deepcopy(
+                                                        (insn_summary_map_typed[succ][dest_reg_name]
+                                                         - insn_summary_map_typed[addr][dest_reg_name]).union(
+                                                            insn_summary_map_typed[addr][src_op_base_reg_name]).union(
+                                                            old[dest_reg_name]))
+                                                # 将诸如eax和rax的值集变为一致
+                                                insn_summary_map_typed[succ][map_reg[dest_reg_name]] = copy.deepcopy(
+                                                    insn_summary_map_typed[succ][dest_reg_name])
                                             else:
                                                 insn_summary_map_typed[succ][dest_reg_name] = set(["CLEAR"])
+                                                # 将诸如eax和rax的值集变为一致
+                                                insn_summary_map_typed[succ][map_reg[dest_reg_name]] = copy.deepcopy(
+                                                    insn_summary_map_typed[succ][dest_reg_name])
 
                                         # mov/cmov insn
                                         if (insn.mnemonic.startswith("mov") or insn.mnemonic.startswith(
@@ -4512,7 +4907,8 @@ def generate_function_summary_typed():
                                                     src_op.value.mem.base)
 
                                                 # mov stack var via base
-                                                if src_op_base_reg_name == "rsp" and src_op.value.mem.index == 0:
+                                                # change: add "rbp"
+                                                if src_op_base_reg_name in ["rsp","rbp"] and src_op.value.mem.index == 0:
                                                     # print(src_op.value.mem.disp)
                                                     if addr in info.insn_stack_offset_map and \
                                                             info.insn_stack_offset_map[addr] != None:
@@ -4529,14 +4925,28 @@ def generate_function_summary_typed():
                                                                 [dest_reg_name])
                                                         if dest_reg_name not in old:
                                                             old[dest_reg_name] = set()
-                                                        insn_summary_map_typed[succ][dest_reg_name] = \
-                                                            copy.deepcopy(
-                                                                (insn_summary_map_typed[succ][dest_reg_name].union( \
-                                                                    insn_summary_map_typed[addr][value]) \
-                                                                 - insn_summary_map_typed[addr][dest_reg_name]).union(
-                                                                    old[dest_reg_name]))
+                                                        # change:相等时会变成
+                                                        if insn_summary_map_typed[succ][dest_reg_name].union(insn_summary_map_typed[addr][value]) == insn_summary_map_typed[addr][dest_reg_name]:
+                                                            insn_summary_map_typed[succ][dest_reg_name]=copy.deepcopy(insn_summary_map_typed[addr][value])
+                                                        else:
+                                                            insn_summary_map_typed[succ][dest_reg_name] = \
+                                                                copy.deepcopy(
+                                                                    (insn_summary_map_typed[succ][dest_reg_name].union( \
+                                                                        insn_summary_map_typed[addr][value]) \
+                                                                     - insn_summary_map_typed[addr][dest_reg_name]).union(
+                                                                        old[dest_reg_name]))
+                                                        # 将诸如eax和rax的值集变为一致
+                                                        insn_summary_map_typed[succ][
+                                                            map_reg[dest_reg_name]] = copy.deepcopy(
+                                                            insn_summary_map_typed[succ][dest_reg_name])
+
                                                     else:
                                                         insn_summary_map_typed[succ][dest_reg_name] = set(["CLEAR"])
+                                                        # 将诸如eax和rax的值集变为一致
+                                                        insn_summary_map_typed[succ][
+                                                            map_reg[dest_reg_name]] = copy.deepcopy(
+                                                            insn_summary_map_typed[succ][dest_reg_name])
+
 
                                                 # mov global var via disp
                                                 elif src_op.value.mem.disp >= info.mmin_data_section_addr \
@@ -4545,7 +4955,11 @@ def generate_function_summary_typed():
                                                     # print(hex(addr))
                                                     # print(hex(src_op.value.mem.disp))
                                                     # add global var to dest op reg
-                                                    value = src_op.value.mem.disp
+                                                    # change here:
+                                                    if src_op_base_reg_name == "rip":
+                                                        value = src_op.value.mem.disp + addr
+                                                    else:
+                                                        value = src_op.value.mem.disp
                                                     if dest_reg_name not in insn_summary_map_typed[succ]:
                                                         insn_summary_map_typed[succ][dest_reg_name] = set()
                                                     if dest_reg_name not in insn_summary_map_typed[addr]:
@@ -4559,13 +4973,25 @@ def generate_function_summary_typed():
                                                                 set([value])) \
                                                              - insn_summary_map_typed[addr][dest_reg_name]).union(
                                                                 old[dest_reg_name]))
+                                                    # 将诸如eax和rax的值集变为一致
+                                                    insn_summary_map_typed[succ][
+                                                        map_reg[dest_reg_name]] = copy.deepcopy(
+                                                        insn_summary_map_typed[succ][dest_reg_name])
+
 
                                                 # mov global/heap var via base, i.e., dereference global/heap var pointer
                                                 elif addr in insn_summary_map_typed and src_op_base_reg_name in \
                                                         insn_summary_map_typed[addr]:
                                                     dereference = False
-                                                    for base_reg_value in insn_summary_map_typed[addr][
-                                                        src_op_base_reg_name]:
+                                                    if src_op.value.mem.index == 0:
+                                                        uset = insn_summary_map_typed[addr][src_op_base_reg_name]
+                                                    else:
+                                                        src_op_index_reg_name = info.insnsmap[addr].reg_name(
+                                                            src_op.value.mem.index)
+                                                        uset = insn_summary_map_typed[addr][src_op_base_reg_name].union(
+                                                            insn_summary_map_typed[addr][src_op_index_reg_name])
+                                                    add_set=set([])
+                                                    for base_reg_value in uset:
                                                         if not isinstance(base_reg_value, int):
                                                             # global pointer dereference
                                                             if base_reg_value.startswith("GLOBAL_POINTER_"):
@@ -4578,22 +5004,27 @@ def generate_function_summary_typed():
 
                                                                 # add global var to dest op reg
                                                                 value = gvar_addr
-                                                                if dest_reg_name not in insn_summary_map_typed[succ]:
-                                                                    insn_summary_map_typed[succ][dest_reg_name] = set()
-                                                                if dest_reg_name not in insn_summary_map_typed[addr]:
-                                                                    insn_summary_map_typed[addr][dest_reg_name] = set(
-                                                                        [dest_reg_name])
-                                                                if dest_reg_name not in old:
-                                                                    old[dest_reg_name] = set()
-                                                                insn_summary_map_typed[succ][dest_reg_name] = \
-                                                                    copy.deepcopy((insn_summary_map_typed[succ][
-                                                                                       dest_reg_name].union( \
-                                                                        set([value])) \
-                                                                                   - insn_summary_map_typed[addr][
-                                                                                       dest_reg_name]).union(
-                                                                        old[dest_reg_name]))
+                                                                add_set.add(value)
+                                                                # if dest_reg_name not in insn_summary_map_typed[succ]:
+                                                                #     insn_summary_map_typed[succ][dest_reg_name] = set()
+                                                                # if dest_reg_name not in insn_summary_map_typed[addr]:
+                                                                #     insn_summary_map_typed[addr][dest_reg_name] = set(
+                                                                #         [dest_reg_name])
+                                                                # if dest_reg_name not in old:
+                                                                #     old[dest_reg_name] = set()
+                                                                # insn_summary_map_typed[succ][dest_reg_name] = \
+                                                                #     copy.deepcopy((insn_summary_map_typed[succ][
+                                                                #                        dest_reg_name]
+                                                                #                    - insn_summary_map_typed[addr][
+                                                                #                        dest_reg_name]).union(set([value])).union(
+                                                                #         old[dest_reg_name]))
+                                                                # # 将诸如eax和rax的值集变为一致
+                                                                # insn_summary_map_typed[succ][
+                                                                #     map_reg[dest_reg_name]] = copy.deepcopy(
+                                                                #     insn_summary_map_typed[succ][dest_reg_name])
+
                                                                 dereference = True
-                                                                break
+                                                                # break
 
                                                             # heap pointer dereference
                                                             elif base_reg_value.startswith("HEAP_POINTER_"):
@@ -4606,6 +5037,30 @@ def generate_function_summary_typed():
 
                                                                 # add global var to dest op reg
                                                                 value = "HEAP_" + hex(hvar_addr)
+                                                                add_set.add(value)
+                                                                # if dest_reg_name not in insn_summary_map_typed[succ]:
+                                                                #     insn_summary_map_typed[succ][dest_reg_name] = set()
+                                                                # if dest_reg_name not in insn_summary_map_typed[addr]:
+                                                                #     insn_summary_map_typed[addr][dest_reg_name] = set(
+                                                                #         [dest_reg_name])
+                                                                # if dest_reg_name not in old:
+                                                                #     old[dest_reg_name] = set()
+                                                                # insn_summary_map_typed[succ][dest_reg_name] = \
+                                                                #     copy.deepcopy((insn_summary_map_typed[succ][
+                                                                #                        dest_reg_name].union( \
+                                                                #         set([value])) \
+                                                                #                    - insn_summary_map_typed[addr][
+                                                                #                        dest_reg_name]).union(
+                                                                #         old[dest_reg_name]))
+                                                                # # 将诸如eax和rax的值集变为一致
+                                                                # insn_summary_map_typed[succ][
+                                                                #     map_reg[dest_reg_name]] = copy.deepcopy(
+                                                                #     insn_summary_map_typed[succ][dest_reg_name])
+
+                                                                dereference = True
+                                                                # break
+                                                            # change
+                                                            elif base_reg_value.startswith("r") or base_reg_value.startswith("e"):
                                                                 if dest_reg_name not in insn_summary_map_typed[succ]:
                                                                     insn_summary_map_typed[succ][dest_reg_name] = set()
                                                                 if dest_reg_name not in insn_summary_map_typed[addr]:
@@ -4613,24 +5068,108 @@ def generate_function_summary_typed():
                                                                         [dest_reg_name])
                                                                 if dest_reg_name not in old:
                                                                     old[dest_reg_name] = set()
-                                                                insn_summary_map_typed[succ][dest_reg_name] = \
-                                                                    copy.deepcopy((insn_summary_map_typed[succ][
-                                                                                       dest_reg_name].union( \
-                                                                        set([value])) \
-                                                                                   - insn_summary_map_typed[addr][
-                                                                                       dest_reg_name]).union(
-                                                                        old[dest_reg_name]))
+
+                                                                add_set.add(base_reg_value)
+
+                                                                # # 此处movzbl 0x5(%rax),%eax 其实会有一些问题，暂时先将污点直接转移
+                                                                # if insn_summary_map_typed[succ][dest_reg_name].union(set([base_reg_value])) == insn_summary_map_typed[addr][dest_reg_name]:
+                                                                #     pass
+                                                                # else:
+                                                                #     insn_summary_map_typed[succ][dest_reg_name] = \
+                                                                #         copy.deepcopy((insn_summary_map_typed[succ][
+                                                                #                            dest_reg_name].union( \
+                                                                #             set([base_reg_value])) \
+                                                                #                        - insn_summary_map_typed[addr][
+                                                                #                            dest_reg_name]).union(
+                                                                #             old[dest_reg_name]))
+                                                                # # 将诸如eax和rax的值集变为一致
+                                                                # insn_summary_map_typed[succ][
+                                                                #     map_reg[dest_reg_name]] = copy.deepcopy(
+                                                                #     insn_summary_map_typed[succ][dest_reg_name])
                                                                 dereference = True
-                                                                break
+                                                                #不知道要不要加break
+                                                                # break
+                                                        else:
+                                                            if dest_reg_name not in insn_summary_map_typed[succ]:
+                                                                insn_summary_map_typed[succ][dest_reg_name] = set()
+                                                            if dest_reg_name not in insn_summary_map_typed[addr]:
+                                                                insn_summary_map_typed[addr][dest_reg_name] = set(
+                                                                    [dest_reg_name])
+                                                            if dest_reg_name not in old:
+                                                                old[dest_reg_name] = set()
+
+                                                            add_set.add(base_reg_value)
+
+                                                            # # 此处movzbl 0x5(%rax),%eax 其实会有一些问题，暂时先将污点直接转移
+                                                            # if insn_summary_map_typed[succ][dest_reg_name].union(
+                                                            #         set([base_reg_value])) == \
+                                                            #         insn_summary_map_typed[addr][dest_reg_name]:
+                                                            #     pass
+                                                            # else:
+                                                            #     insn_summary_map_typed[succ][dest_reg_name] = \
+                                                            #         copy.deepcopy((insn_summary_map_typed[succ][
+                                                            #                            dest_reg_name].union( \
+                                                            #             set([base_reg_value])) \
+                                                            #                        - insn_summary_map_typed[addr][
+                                                            #                            dest_reg_name]).union(
+                                                            #             old[dest_reg_name]))
+                                                            # # 将诸如eax和rax的值集变为一致
+                                                            # insn_summary_map_typed[succ][
+                                                            #     map_reg[dest_reg_name]] = copy.deepcopy(
+                                                            #     insn_summary_map_typed[succ][dest_reg_name])
+                                                            dereference = True
+
                                                     if dereference == False:
                                                         insn_summary_map_typed[succ][dest_reg_name] = set(["CLEAR"])
+                                                        # 将诸如eax和rax的值集变为一致
+                                                        insn_summary_map_typed[succ][
+                                                            map_reg[dest_reg_name]] = copy.deepcopy(
+                                                            insn_summary_map_typed[succ][dest_reg_name])
+                                                    else:
+                                                        if dest_reg_name not in insn_summary_map_typed[succ]:
+                                                            insn_summary_map_typed[succ][dest_reg_name] = set()
+                                                        if dest_reg_name not in insn_summary_map_typed[addr]:
+                                                            insn_summary_map_typed[addr][dest_reg_name] = set(
+                                                                [dest_reg_name])
+                                                        if dest_reg_name not in old:
+                                                            old[dest_reg_name] = set()
+                                                        insn_summary_map_typed[succ][dest_reg_name] = copy.deepcopy(add_set).union(old[dest_reg_name])
+                                                        # 将诸如eax和rax的值集变为一致
+                                                        insn_summary_map_typed[succ][
+                                                            map_reg[dest_reg_name]] = copy.deepcopy(
+                                                            insn_summary_map_typed[succ][dest_reg_name])
+
+                                                elif src_op_base_reg_name == "rip":
+                                                    value = src_op.value.mem.disp + addr
+                                                    if dest_reg_name not in insn_summary_map_typed[succ]:
+                                                        insn_summary_map_typed[succ][dest_reg_name] = set()
+                                                    if dest_reg_name not in insn_summary_map_typed[addr]:
+                                                        insn_summary_map_typed[addr][dest_reg_name] = set(
+                                                            [dest_reg_name])
+                                                    if dest_reg_name not in old:
+                                                        old[dest_reg_name] = set()
+                                                    insn_summary_map_typed[succ][dest_reg_name] = \
+                                                        copy.deepcopy(
+                                                            (insn_summary_map_typed[succ][dest_reg_name].union( \
+                                                                set([value])) \
+                                                             - insn_summary_map_typed[addr][dest_reg_name]).union(
+                                                                old[dest_reg_name]))
+                                                    # 将诸如eax和rax的值集变为一致
+                                                    insn_summary_map_typed[succ][
+                                                        map_reg[dest_reg_name]] = copy.deepcopy(
+                                                        insn_summary_map_typed[succ][dest_reg_name])
                                                 else:
                                                     insn_summary_map_typed[succ][dest_reg_name] = set(["CLEAR"])
+                                                    # 将诸如eax和rax的值集变为一致
+                                                    insn_summary_map_typed[succ][
+                                                        map_reg[dest_reg_name]] = copy.deepcopy(
+                                                        insn_summary_map_typed[succ][dest_reg_name])
+
 
                                             elif src_op.value.mem.base == 0:
                                                 # mov stack var via index
                                                 if src_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                        src_op.value.mem.index) == "rsp":
+                                                        src_op.value.mem.index) in ["rbp","rsp"]:
                                                     if addr in info.insn_stack_offset_map and \
                                                             info.insn_stack_offset_map[addr] != None:
                                                         value = info.insn_stack_offset_map[
@@ -4656,6 +5195,11 @@ def generate_function_summary_typed():
                                                                     insn_summary_map_typed[addr][value]) \
                                                                  - insn_summary_map_typed[addr][dest_reg_name]).union(
                                                                     old[dest_reg_name]))
+                                                        # 将诸如eax和rax的值集变为一致
+                                                        insn_summary_map_typed[succ][
+                                                            map_reg[dest_reg_name]] = copy.deepcopy(
+                                                            insn_summary_map_typed[succ][dest_reg_name])
+
                                                 # mov stack/global via disp
                                                 elif src_op.value.mem.index == 0:
                                                     # print("*")
@@ -4681,16 +5225,36 @@ def generate_function_summary_typed():
                                                                 insn_summary_map_typed[addr][value]) \
                                                              - insn_summary_map_typed[addr][dest_reg_name]).union(
                                                                 old[dest_reg_name]))
+                                                    # 将诸如eax和rax的值集变为一致
+                                                    insn_summary_map_typed[succ][
+                                                        map_reg[dest_reg_name]] = copy.deepcopy(
+                                                        insn_summary_map_typed[succ][dest_reg_name])
+
                                                 else:
                                                     insn_summary_map_typed[succ][dest_reg_name] = set(["CLEAR"])
+                                                    # 将诸如eax和rax的值集变为一致
+                                                    insn_summary_map_typed[succ][
+                                                        map_reg[dest_reg_name]] = copy.deepcopy(
+                                                        insn_summary_map_typed[succ][dest_reg_name])
+
                                             else:
                                                 insn_summary_map_typed[succ][dest_reg_name] = set(["CLEAR"])
+                                                # 将诸如eax和rax的值集变为一致
+                                                insn_summary_map_typed[succ][map_reg[dest_reg_name]] = copy.deepcopy(
+                                                    insn_summary_map_typed[succ][dest_reg_name])
+
                                     elif insn.operands[0].type == X86_OP_REG and insn.operands[1].type == X86_OP_IMM:
                                         dest_reg_name = insn.reg_name(insn.operands[0].value.reg)
                                         if dest_reg_name in info.gpr:
                                             insn_summary_map_typed[succ][dest_reg_name] = set(["CLEAR"])
+                                            # 将诸如eax和rax的值集变为一致
+                                            insn_summary_map_typed[succ][map_reg[dest_reg_name]] = copy.deepcopy(
+                                                insn_summary_map_typed[succ][dest_reg_name])
+
                                     elif insn.operands[0].type == X86_OP_MEM and insn.operands[1].type == X86_OP_REG:
                                         src_reg_name = insn.reg_name(insn.operands[1].value.reg)
+                                        if src_reg_name not in info.gpr:
+                                            src_reg_name=register_map[src_reg_name]
                                         dest_op = insn.operands[0]
 
                                         # all mov/cmov, no lea, as dest is mem
@@ -4700,7 +5264,8 @@ def generate_function_summary_typed():
                                             dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                             # mov into stack var via base
-                                            if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
+                                            # 此处加入了rbp作为基址寄存器的情况，因为经常会将rsp放入rbp，使用rbp进行操作
+                                            if dest_op_base_reg_name in  ["rsp","rbp"] and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -4710,16 +5275,23 @@ def generate_function_summary_typed():
                                                     # print(value)
                                                     if src_reg_name not in insn_summary_map_typed[addr]:
                                                         insn_summary_map_typed[addr][src_reg_name] = set([src_reg_name])
+                                                        insn_summary_map_typed[addr][map_reg[src_reg_name]] = set([map_reg[src_reg_name]])
                                                     if value not in insn_summary_map_typed[succ]:
                                                         insn_summary_map_typed[succ][value] = set()
                                                     if value not in insn_summary_map_typed[addr]:
                                                         insn_summary_map_typed[addr][value] = set([value])
                                                     if value not in old:
                                                         old[value] = set()
+                                                    if src_reg_name in register_map:
+                                                        src_reg_name = register_map[src_reg_name]
+
+                                                    # if insn_summary_map_typed[succ][value] <= insn_summary_map_typed[addr][src_reg_name]:
+                                                    #     pass
+                                                    # else:
                                                     insn_summary_map_typed[succ][value] = \
-                                                        copy.deepcopy((insn_summary_map_typed[succ][value].union(
-                                                            insn_summary_map_typed[addr][src_reg_name]) \
+                                                        copy.deepcopy((insn_summary_map_typed[succ][value] \
                                                                        - insn_summary_map_typed[addr][value]).union(
+                                                            insn_summary_map_typed[addr][src_reg_name]).union(
                                                             old[value]))
 
                                             # mov into global var via disp
@@ -4729,15 +5301,21 @@ def generate_function_summary_typed():
                                                 # print(hex(addr))
                                                 # print(hex(dest_op.value.mem.disp))
                                                 # add global var to dest
-                                                value = dest_op.value.mem.disp
+                                                if dest_op_base_reg_name == "rip":
+                                                    value = dest_op.value.mem.disp + addr
+                                                else:
+                                                    value = dest_op.value.mem.disp
                                                 if src_reg_name not in insn_summary_map_typed[addr]:
                                                     insn_summary_map_typed[addr][src_reg_name] = set([src_reg_name])
+                                                    insn_summary_map_typed[addr][map_reg[src_reg_name]] = set([map_reg[src_reg_name]])
                                                 if value not in insn_summary_map_typed[succ]:
                                                     insn_summary_map_typed[succ][value] = set()
                                                 if value not in insn_summary_map_typed[addr]:
                                                     insn_summary_map_typed[addr][value] = set([value])
                                                 if value not in old:
                                                     old[value] = set()
+                                                if src_reg_name in register_map:
+                                                    src_reg_name = register_map[src_reg_name]
                                                 insn_summary_map_typed[succ][value] = \
                                                     copy.deepcopy((insn_summary_map_typed[succ][value].union(
                                                         insn_summary_map_typed[addr][src_reg_name]) \
@@ -4749,6 +5327,7 @@ def generate_function_summary_typed():
                                                     insn_summary_map_typed[addr]:
                                                 for base_reg_value in insn_summary_map_typed[addr][
                                                     dest_op_base_reg_name]:
+                                                    # 这里匹配一个就会结束，理论上讲，应该要遍历所有的
                                                     if not isinstance(base_reg_value, int):
                                                         # global pointer dereference
                                                         if base_reg_value.startswith("GLOBAL_POINTER_"):
@@ -4769,12 +5348,17 @@ def generate_function_summary_typed():
                                                             if src_reg_name not in insn_summary_map_typed[addr]:
                                                                 insn_summary_map_typed[addr][src_reg_name] = set(
                                                                     [src_reg_name])
+                                                                insn_summary_map_typed[addr][
+                                                                    map_reg[src_reg_name]] = set(
+                                                                    [map_reg[src_reg_name]])
                                                             if value not in insn_summary_map_typed[succ]:
                                                                 insn_summary_map_typed[succ][value] = set()
                                                             if value not in insn_summary_map_typed[addr]:
                                                                 insn_summary_map_typed[addr][value] = set([value])
                                                             if value not in old:
                                                                 old[value] = set()
+                                                            if src_reg_name in register_map:
+                                                                src_reg_name = register_map[src_reg_name]
                                                             insn_summary_map_typed[succ][value] = \
                                                                 copy.deepcopy(
                                                                     (insn_summary_map_typed[succ][value].union( \
@@ -4802,12 +5386,17 @@ def generate_function_summary_typed():
                                                             if src_reg_name not in insn_summary_map_typed[addr]:
                                                                 insn_summary_map_typed[addr][src_reg_name] = set(
                                                                     [src_reg_name])
+                                                                insn_summary_map_typed[addr][
+                                                                    map_reg[src_reg_name]] = set(
+                                                                    [map_reg[src_reg_name]])
                                                             if value not in insn_summary_map_typed[succ]:
                                                                 insn_summary_map_typed[succ][value] = set()
                                                             if value not in insn_summary_map_typed[addr]:
                                                                 insn_summary_map_typed[addr][value] = set([value])
                                                             if value not in old:
                                                                 old[value] = set()
+                                                            if src_reg_name in register_map:
+                                                                src_reg_name = register_map[src_reg_name]
                                                             insn_summary_map_typed[succ][value] = \
                                                                 copy.deepcopy(
                                                                     (insn_summary_map_typed[succ][value].union( \
@@ -4815,13 +5404,55 @@ def generate_function_summary_typed():
                                                                      - insn_summary_map_typed[addr][value]).union(
                                                                         old[value]))
                                                             break
+                                                    # 当base_reg中存放的是一个内存时
+                                                    else:
+                                                        value = base_reg_value
+                                                        if src_reg_name not in insn_summary_map_typed[addr]:
+                                                            insn_summary_map_typed[addr][src_reg_name] = set(
+                                                                [src_reg_name])
+                                                            insn_summary_map_typed[addr][
+                                                                map_reg[src_reg_name]] = set(
+                                                                [map_reg[src_reg_name]])
+                                                        if value not in insn_summary_map_typed[succ]:
+                                                            insn_summary_map_typed[succ][value] = set()
+                                                        if value not in insn_summary_map_typed[addr]:
+                                                            insn_summary_map_typed[addr][value] = set([value])
+                                                        if value not in old:
+                                                            old[value] = set()
+                                                        if src_reg_name in register_map:
+                                                            src_reg_name = register_map[src_reg_name]
+                                                        insn_summary_map_typed[succ][value] = \
+                                                            copy.deepcopy(
+                                                                (insn_summary_map_typed[succ][value].union( \
+                                                                    insn_summary_map_typed[addr][src_reg_name]) \
+                                                                 - insn_summary_map_typed[addr][value]).union(
+                                                                    old[value]))
 
+                                            elif dest_op_base_reg_name == "rip":
+                                                dest_value = dest_op.value.mem.disp + addr
+                                                if dest_value not in insn_summary_map_typed[succ]:
+                                                    insn_summary_map_typed[succ][dest_value] = set()
+                                                if dest_value not in insn_summary_map_typed[addr]:
+                                                    insn_summary_map_typed[addr][dest_value] = set(
+                                                        [dest_value])
+                                                if dest_value not in old:
+                                                    old[dest_value] = set()
+                                                insn_summary_map_typed[succ][dest_value] = \
+                                                    copy.deepcopy(
+                                                        (insn_summary_map_typed[succ][dest_value].union( \
+                                                            insn_summary_map_typed[addr][src_reg_name])                                                             \
+                                                         - insn_summary_map_typed[addr][dest_value]).union(
+                                                            old[dest_value]))
+                                                # 将诸如eax和rax的值集变为一致
+                                                insn_summary_map_typed[succ][
+                                                    map_reg[dest_reg_name]] = copy.deepcopy(
+                                                    insn_summary_map_typed[succ][dest_reg_name])
 
                                         elif dest_op.value.mem.base == 0 and src_reg_name in info.gpr:
 
                                             # mov into stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "rsp":
+                                                    dest_op.value.mem.index) in ["rbp","rsp"]:
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -4834,12 +5465,16 @@ def generate_function_summary_typed():
                                                     # print(value)
                                                     if src_reg_name not in insn_summary_map_typed[addr]:
                                                         insn_summary_map_typed[addr][src_reg_name] = set([src_reg_name])
+                                                        insn_summary_map_typed[addr][map_reg[src_reg_name]] = set(
+                                                            [map_reg[src_reg_name]])
                                                     if value not in insn_summary_map_typed[succ]:
                                                         insn_summary_map_typed[succ][value] = set()
                                                     if value not in insn_summary_map_typed[addr]:
                                                         insn_summary_map_typed[addr][value] = set([value])
                                                     if value not in old:
                                                         old[value] = set()
+                                                    if src_reg_name in register_map:
+                                                        src_reg_name = register_map[src_reg_name]
                                                     insn_summary_map_typed[succ][value] = \
                                                         copy.deepcopy((insn_summary_map_typed[succ][value].union(
                                                             insn_summary_map_typed[addr][src_reg_name]) \
@@ -4855,12 +5490,16 @@ def generate_function_summary_typed():
                                                 # print(hex(dest_op.value.mem.disp))
                                                 if src_reg_name not in insn_summary_map_typed[addr]:
                                                     insn_summary_map_typed[addr][src_reg_name] = set([src_reg_name])
+                                                    insn_summary_map_typed[addr][map_reg[src_reg_name]] = set(
+                                                        [map_reg[src_reg_name]])
                                                 if value not in insn_summary_map_typed[succ]:
                                                     insn_summary_map_typed[succ][value] = set()
                                                 if value not in insn_summary_map_typed[addr]:
                                                     insn_summary_map_typed[addr][value] = set([value])
                                                 if value not in old:
                                                     old[value] = set()
+                                                if src_reg_name in register_map:
+                                                    src_reg_name = register_map[src_reg_name]
                                                 insn_summary_map_typed[succ][value] = \
                                                     copy.deepcopy((insn_summary_map_typed[succ][value].union(
                                                         insn_summary_map_typed[addr][src_reg_name]) \
@@ -4878,7 +5517,7 @@ def generate_function_summary_typed():
                                             dest_op_base_reg_name = info.insnsmap[addr].reg_name(dest_op.value.mem.base)
 
                                             # mov into stack var via base
-                                            if dest_op_base_reg_name == "rsp" and dest_op.value.mem.index == 0:
+                                            if dest_op_base_reg_name in ["rbp","rsp"] and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -4889,14 +5528,18 @@ def generate_function_summary_typed():
                                                     insn_summary_map_typed[succ][value] = set(["CLEAR"])
 
                                             # mov into global var via disp
+                                            # TODO:修改适配64位rip寻址
                                             elif dest_op.value.mem.disp >= info.mmin_data_section_addr \
                                                     and dest_op.value.mem.disp <= info.mmax_data_section_addr:
-                                                # print("*")
-                                                # print(hex(addr))
-                                                # print(hex(dest_op.value.mem.disp))
-                                                # clear dest
-                                                value = dest_op.value.mem.disp
-                                                insn_summary_map_typed[succ][value] = set(["CLEAR"])
+                                                if dest_op_base_reg_name == "rip":
+                                                    insn_summary_map_typed[succ][dest_op.value.mem.disp + addr]=set([insn.operands[1].value.imm])
+                                                else:
+                                                    # print("*")
+                                                    # print(hex(addr))
+                                                    # print(hex(dest_op.value.mem.disp))
+                                                    # clear dest
+                                                    value = dest_op.value.mem.disp
+                                                    insn_summary_map_typed[succ][value] = set(["CLEAR"])
 
                                             # mov global/heap var via base, i.e., dereference global/heap var pointer
                                             elif addr in insn_summary_map_typed and dest_op_base_reg_name in \
@@ -4931,7 +5574,7 @@ def generate_function_summary_typed():
                                         else:
                                             # mov into stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "rsp":
+                                                    dest_op.value.mem.index) in ["rbp","rsp"]:
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -4958,8 +5601,9 @@ def generate_function_summary_typed():
                                         if dest_reg_name in info.gpr:
 
                                             # reserve the dest if opcode is add/sub and dest reg contains global/heap pointer/var
+                                            # change: consider add
                                             if (insn.mnemonic.startswith("add") or insn.mnemonic.startswith(
-                                                    "sub")) and addr in insn_summary_map_typed \
+                                                    "sub") or insn.mnemonic.startswith("and") or insn.mnemonic.startswith("sh") or insn.mnemonic.startswith("or") or insn.mnemonic.startswith("sar")) and addr in insn_summary_map_typed \
                                                     and dest_reg_name in insn_summary_map_typed[addr]:
                                                 # print("*")
                                                 # print(hex(addr))
@@ -4980,6 +5624,9 @@ def generate_function_summary_typed():
                                                         elif dest_reg_value.startswith("HEAP_"):
                                                             tmp_set.add(dest_reg_value)
                                                             dest_reserve = True
+                                                        elif dest_reg_value.startswith("r") or dest_reg_value.startswith("e"):
+                                                            tmp_set.add(dest_reg_value)
+                                                            dest_reserve = True
                                                     else:
                                                         # global var
                                                         if dest_reg_value >= info.mmin_data_section_addr \
@@ -4989,13 +5636,32 @@ def generate_function_summary_typed():
                                                             # print(hex(dest_reg_value))
                                                             tmp_set.add(dest_reg_value)
                                                             dest_reserve = True
+                                                        # change: shl 0x4,%eax 如果eax中是一个堆栈
+                                                        else:
+                                                            tmp_set.add(dest_reg_value)
+                                                            dest_reserve = True
+
 
                                                 if dest_reserve == True:
                                                     insn_summary_map_typed[succ][dest_reg_name] = tmp_set
+                                                    # 将诸如eax和rax的值集变为一致
+                                                    insn_summary_map_typed[succ][
+                                                        map_reg[dest_reg_name]] = copy.deepcopy(
+                                                        insn_summary_map_typed[succ][dest_reg_name])
+
                                                 else:
                                                     insn_summary_map_typed[succ][dest_reg_name] = set(["CLEAR"])
+                                                    # 将诸如eax和rax的值集变为一致
+                                                    insn_summary_map_typed[succ][
+                                                        map_reg[dest_reg_name]] = copy.deepcopy(
+                                                        insn_summary_map_typed[succ][dest_reg_name])
+
                                             else:
                                                 insn_summary_map_typed[succ][dest_reg_name] = set(["CLEAR"])
+                                                # 将诸如eax和rax的值集变为一致
+                                                insn_summary_map_typed[succ][map_reg[dest_reg_name]] = copy.deepcopy(
+                                                    insn_summary_map_typed[succ][dest_reg_name])
+
                                     elif insn.operands[0].type == X86_OP_MEM:
                                         dest_op = insn.operands[0]
 
@@ -5006,7 +5672,7 @@ def generate_function_summary_typed():
 
                                             # dest mem: stack var via base
                                             if info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.base) == "rsp" and dest_op.value.mem.index == 0:
+                                                    dest_op.value.mem.base) in ["rbp","rsp"] and dest_op.value.mem.index == 0:
                                                 # print(dest_op.value.mem.disp)
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
@@ -5014,6 +5680,9 @@ def generate_function_summary_typed():
                                                     # print("*")
                                                     # print(hex(addr))
                                                     # print(value)
+
+                                                    #这里暂时注释掉了 因为不是很合理
+                                                    #比如or eax，（rbp-18） 会直接把堆栈设置为clear？
                                                     insn_summary_map_typed[succ][value] = set(["CLEAR"])
 
                                             # dest mem: global var via disp
@@ -5060,7 +5729,7 @@ def generate_function_summary_typed():
                                         else:
                                             # dest mem: stack var via index
                                             if dest_op.value.mem.index != 0 and info.insnsmap[addr].reg_name(
-                                                    dest_op.value.mem.index) == "rsp":
+                                                    dest_op.value.mem.index) in ["rbp","rsp"]:
                                                 if addr in info.insn_stack_offset_map and info.insn_stack_offset_map[
                                                     addr] != None:
                                                     value = info.insn_stack_offset_map[
@@ -5085,7 +5754,7 @@ def generate_function_summary_typed():
                                         # we solved the dest mem addr
                                         if value != None:
                                             if (insn.mnemonic.startswith("add") or insn.mnemonic.startswith(
-                                                    "sub")) and addr in insn_summary_map_typed \
+                                                    "sub") or insn.mnemonic.startswith("and") or insn.mnemonic.startswith("sh") or insn.mnemonic.startswith("or") or insn.mnemonic.startswith("sar")) and addr in insn_summary_map_typed \
                                                     and value in insn_summary_map_typed[addr]:
                                                 # print("*")
                                                 # print(hex(addr))
@@ -5104,6 +5773,9 @@ def generate_function_summary_typed():
 
                                                         # heap pointer and heap var
                                                         elif dest_mem_value.startswith("HEAP_"):
+                                                            tmp_set.add(dest_mem_value)
+                                                            dest_reserve = True
+                                                        elif dest_mem_value.startswith("r") or dest_mem_value.startswith("e"):
                                                             tmp_set.add(dest_mem_value)
                                                             dest_reserve = True
                                                     else:
@@ -5481,6 +6153,9 @@ register_map = {
     "xmm6": "xmm6",
     "xmm7": "xmm7",
     # 添加更多的寄存器映射，如有需要
+    "ax":"rax",
+    "al":"rax",
+    "eax":"rax",
 }
 
 
